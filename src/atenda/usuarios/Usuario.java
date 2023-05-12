@@ -6,10 +6,10 @@ public class Usuario {
     String username;
     String password;
     String nome;
-    String rol;
+    Rol rol;
     String avatar;
 
-    public Usuario(int idUsuario, String username, String password, String nome, String rol, String avatar) {
+    public Usuario(int idUsuario, String username, String password, String nome, Rol rol, String avatar) {
         this.idUsuario = idUsuario;
         this.username = username;
         this.password = password;
@@ -53,11 +53,11 @@ public class Usuario {
         this.nome = nome;
     }
 
-    public String getRol() {
+    public Rol getRol() {
         return rol;
     }
 
-    public void setRol(String rol) {
+    public void setRol(Rol rol) {
         this.rol = rol;
     }
 
