@@ -16,43 +16,51 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" alignment="0" attributes="0">
+          <Group type="102" attributes="0">
               <EmptySpace min="-2" pref="41" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" alignment="0" attributes="0">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane1" min="-2" pref="468" max="-2" attributes="0"/>
-                          <Group type="102" attributes="0">
-                              <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace type="separate" max="-2" attributes="0"/>
-                              <Component id="jTextField1" min="-2" pref="236" max="-2" attributes="0"/>
-                          </Group>
-                      </Group>
-                      <EmptySpace pref="66" max="32767" attributes="0"/>
-                  </Group>
                   <Group type="102" alignment="0" attributes="0">
                       <Group type="103" groupAlignment="1" attributes="0">
                           <Component id="jButton2" min="-2" pref="140" max="-2" attributes="0"/>
                           <Group type="102" attributes="0">
-                              <Component id="jButton1" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                              <Component id="jTextField2" min="-2" pref="104" max="-2" attributes="0"/>
+                              <Component id="botonEliminarProducto" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="separate" max="-2" attributes="0"/>
+                              <Component id="botonNuevoProducto" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
-                              <EmptySpace max="32767" attributes="0"/>
-                              <Component id="botonNuevoProducto1" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" pref="120" max="-2" attributes="0"/>
+                              <EmptySpace type="separate" max="-2" attributes="0"/>
+                              <Component id="botonActualizar" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="63" max="-2" attributes="0"/>
+                              <Component id="mensajeProductoAdminLabel" min="-2" pref="160" max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
-                              <EmptySpace min="-2" pref="115" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="79" max="-2" attributes="0"/>
                               <Component id="botonExportacion" min="-2" pref="139" max="-2" attributes="0"/>
-                              <EmptySpace max="32767" attributes="0"/>
                           </Group>
                       </Group>
                   </Group>
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace min="-2" pref="474" max="-2" attributes="0"/>
+                      <Component id="mensajeProductosPanelAdmin" min="-2" pref="367" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="0" attributes="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="separate" max="-2" attributes="0"/>
+                              <Component id="buscarField" min="-2" pref="236" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="33" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="jLabel3" alignment="1" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="36" max="-2" attributes="0"/>
+                      <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <Component id="jScrollPane1" alignment="0" min="-2" pref="468" max="-2" attributes="0"/>
               </Group>
+              <EmptySpace max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -62,22 +70,36 @@
               <EmptySpace min="-2" pref="38" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="jTextField1" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="buscarField" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace type="separate" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="16" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="jLabel3" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Component id="jScrollPane1" min="-2" pref="253" max="-2" attributes="0"/>
-              <EmptySpace min="-2" pref="39" max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="jButton1" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="jTextField2" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="botonNuevoProducto1" alignment="3" min="-2" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" attributes="0">
+                      <Component id="mensajeProductosPanelAdmin" min="-2" pref="15" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="mensajeProductoAdminLabel" min="-2" pref="23" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="102" attributes="0">
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="botonEliminarProducto" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="botonNuevoProducto" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="botonActualizar" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="51" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jButton2" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="botonExportacion" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
               </Group>
-              <EmptySpace pref="43" max="32767" attributes="0"/>
-              <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="jButton2" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="botonExportacion" alignment="3" min="-2" max="-2" attributes="0"/>
-              </Group>
-              <EmptySpace min="-2" pref="42" max="-2" attributes="0"/>
+              <EmptySpace max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -88,9 +110,9 @@
         <Property name="text" type="java.lang.String" value="Buscar"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JTextField" name="jTextField1">
+    <Component class="javax.swing.JTextField" name="buscarField">
       <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextField1ActionPerformed"/>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buscarFieldActionPerformed"/>
       </Events>
     </Component>
     <Container class="javax.swing.JScrollPane" name="jScrollPane1">
@@ -100,17 +122,17 @@
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
       <SubComponents>
-        <Component class="javax.swing.JTable" name="jTable1">
+        <Component class="javax.swing.JTable" name="tablaProductosAdmin">
           <Properties>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
               <Table columnCount="7" rowCount="4">
-                <Column editable="false" title="Codigo" type="java.lang.Object"/>
-                <Column editable="false" title="Nome" type="java.lang.Object"/>
-                <Column editable="false" title="Coste" type="java.lang.Object"/>
-                <Column editable="false" title="Prezo" type="java.lang.Object"/>
-                <Column editable="false" title="Desconto(%)" type="java.lang.Object"/>
-                <Column editable="false" title="IVA(%) " type="java.lang.Object"/>
-                <Column editable="false" title="Stok" type="java.lang.Object"/>
+                <Column editable="false" title="Codigo" type="java.lang.Integer"/>
+                <Column editable="true" title="Nome" type="java.lang.String"/>
+                <Column editable="true" title="Coste" type="java.lang.Double"/>
+                <Column editable="true" title="Prezo" type="java.lang.Double"/>
+                <Column editable="true" title="Desconto" type="java.lang.Integer"/>
+                <Column editable="true" title="IVA" type="java.lang.Integer"/>
+                <Column editable="true" title="Stock" type="java.lang.Integer"/>
               </Table>
             </Property>
             <Property name="columnModel" type="javax.swing.table.TableColumnModel" editor="org.netbeans.modules.form.editors2.TableColumnModelEditor">
@@ -156,18 +178,20 @@
               <TableHeader reorderingAllowed="true" resizingAllowed="true"/>
             </Property>
           </Properties>
+          <Events>
+            <EventHandler event="propertyChange" listener="java.beans.PropertyChangeListener" parameters="java.beans.PropertyChangeEvent" handler="tablaProductosAdminPropertyChange"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
-    <Component class="javax.swing.JButton" name="jButton1">
+    <Component class="javax.swing.JButton" name="botonEliminarProducto">
       <Properties>
         <Property name="text" type="java.lang.String" value="Borra"/>
       </Properties>
       <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton1ActionPerformed"/>
+        <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="botonEliminarProductoMouseClicked"/>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="botonEliminarProductoActionPerformed"/>
       </Events>
-    </Component>
-    <Component class="javax.swing.JTextField" name="jTextField2">
     </Component>
     <Component class="javax.swing.JButton" name="botonExportacion">
       <Properties>
@@ -177,17 +201,39 @@
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="botonExportacionActionPerformed"/>
       </Events>
     </Component>
-    <Component class="javax.swing.JButton" name="botonNuevoProducto1">
+    <Component class="javax.swing.JButton" name="botonNuevoProducto">
       <Properties>
         <Property name="text" type="java.lang.String" value="Novo"/>
       </Properties>
       <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="botonNuevoProducto1ActionPerformed"/>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="botonNuevoProductoActionPerformed"/>
       </Events>
     </Component>
     <Component class="javax.swing.JButton" name="jButton2">
       <Properties>
         <Property name="text" type="java.lang.String" value="Importaci&#xf3;n XML"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="mensajeProductoAdminLabel">
+    </Component>
+    <Component class="javax.swing.JButton" name="botonActualizar">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Gardar"/>
+      </Properties>
+      <Events>
+        <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="botonActualizarMouseClicked"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JLabel" name="mensajeProductosPanelAdmin">
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel2">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="%"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel3">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="%"/>
       </Properties>
     </Component>
   </SubComponents>

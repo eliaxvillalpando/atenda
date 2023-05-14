@@ -1,9 +1,13 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package atenda.vistas.usuario;
+
+import atenda.admin.negocio.Producto;
+import atenda.admin.negocio.ProductoDAO;
+import java.util.List;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -14,8 +18,13 @@ public class PedidoPanel extends javax.swing.JPanel {
     /**
      * Creates new form PedidoPanel
      */
+    private int stockDisponible = 0;
+
+    private List<Producto> productosAgregados = new ArrayList<>();
+
     public PedidoPanel() {
         initComponents();
+        fillComboProductos();
     }
 
     /**
@@ -32,38 +41,65 @@ public class PedidoPanel extends javax.swing.JPanel {
         jLabel1 = new javax.swing.JLabel();
         SliderCantidadUnidades = new javax.swing.JSpinner();
         jLabel3 = new javax.swing.JLabel();
-        sliderDescuento = new javax.swing.JSlider();
         botonAgregarProducto = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tablaContenidoPedido = new javax.swing.JTable();
         botonHacerPedido = new javax.swing.JButton();
         botonCancelarPedido = new javax.swing.JButton();
         botonEliminarProducto = new javax.swing.JButton();
+        jLabel4 = new javax.swing.JLabel();
+        stockProducto = new javax.swing.JLabel();
+        jSpinner1 = new javax.swing.JSpinner();
+        mensajeStock = new javax.swing.JLabel();
+
+        comboProductos.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                comboProductosItemStateChanged(evt);
+            }
+        });
 
         jLabel2.setText("Seleccione produto");
 
         jLabel1.setText("Uds");
 
+        SliderCantidadUnidades.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                SliderCantidadUnidadesStateChanged(evt);
+            }
+        });
+        SliderCantidadUnidades.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                SliderCantidadUnidadesPropertyChange(evt);
+            }
+        });
+
         jLabel3.setText("Desconto (%)");
 
-        sliderDescuento.setOrientation(javax.swing.JSlider.VERTICAL);
-
         botonAgregarProducto.setText("Engadir ao pedido");
+        botonAgregarProducto.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonAgregarProductoMouseClicked(evt);
+            }
+        });
 
         tablaContenidoPedido.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
                 "Produto", "UDS", "Prezo (€)", "Desc (%)", "IVA (%)"
             }
         ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Integer.class, java.lang.Integer.class
+            };
             boolean[] canEdit = new boolean [] {
                 false, false, false, false, false
             };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
@@ -72,88 +108,296 @@ public class PedidoPanel extends javax.swing.JPanel {
         jScrollPane1.setViewportView(tablaContenidoPedido);
 
         botonHacerPedido.setText("Tramitar pedido");
+        botonHacerPedido.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonHacerPedidoMouseClicked(evt);
+            }
+        });
 
         botonCancelarPedido.setText("Cancelar pedido");
+        botonCancelarPedido.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonCancelarPedidoMouseClicked(evt);
+            }
+        });
 
         botonEliminarProducto.setText("Eliminar do pedido");
+        botonEliminarProducto.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonEliminarProductoMouseClicked(evt);
+            }
+        });
+
+        jLabel4.setText("Stock");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(47, 47, 47)
+                .addGap(14, 14, 14)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 461, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(18, 18, 18)
+                            .addComponent(botonEliminarProducto))
+                        .addGroup(layout.createSequentialGroup()
+                            .addGap(24, 24, 24)
+                            .addComponent(botonHacerPedido, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(159, 159, 159)
+                            .addComponent(botonCancelarPedido, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addGap(33, 33, 33)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(comboProductos, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(stockProducto, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                    .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(comboProductos, javax.swing.GroupLayout.Alignment.LEADING, 0, 147, Short.MAX_VALUE))
                                 .addGap(18, 18, 18)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel1)
-                                    .addComponent(SliderCantidadUnidades, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(74, 74, 74)
-                                .addComponent(sliderDescuento, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(21, 21, 21))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 266, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jLabel3)))
-                        .addGap(54, 54, 54)
-                        .addComponent(botonAgregarProducto))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(14, 14, 14)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(SliderCantidadUnidades, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGap(20, 20, 20)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(botonAgregarProducto)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 461, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(botonEliminarProducto))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(24, 24, 24)
-                                .addComponent(botonHacerPedido, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(159, 159, 159)
-                                .addComponent(botonCancelarPedido, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addContainerGap(40, Short.MAX_VALUE))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(6, 6, 6)
+                                        .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(jLabel3))
+                                .addGap(18, 18, 18)))
+                        .addGap(0, 151, Short.MAX_VALUE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(141, 141, 141)
+                .addComponent(mensajeStock, javax.swing.GroupLayout.PREFERRED_SIZE, 348, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(11, 11, 11)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel1))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(comboProductos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(SliderCantidadUnidades, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(64, 64, 64))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel3)
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(sliderDescuento, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(botonAgregarProducto)
-                                .addGap(67, 67, 67)))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(58, 58, 58)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel3))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(comboProductos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(SliderCantidadUnidades, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(50, 50, 50))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(53, 53, 53)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel4)
+                            .addComponent(stockProducto, javax.swing.GroupLayout.PREFERRED_SIZE, 17, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(45, 45, 45)
+                        .addComponent(botonAgregarProducto)))
+                .addGap(29, 29, 29)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(botonEliminarProducto)
-                        .addGap(137, 137, 137)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(mensajeStock, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(21, 21, 21)))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(botonCancelarPedido)
                     .addComponent(botonHacerPedido))
                 .addGap(69, 69, 69))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void SliderCantidadUnidadesPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_SliderCantidadUnidadesPropertyChange
+        // TODO add your handling code here:
+
+    }//GEN-LAST:event_SliderCantidadUnidadesPropertyChange
+
+    private void SliderCantidadUnidadesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_SliderCantidadUnidadesStateChanged
+        // TODO add your handling code here:
+
+
+    }//GEN-LAST:event_SliderCantidadUnidadesStateChanged
+
+    private void botonAgregarProductoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonAgregarProductoMouseClicked
+        // TODO add your handling code here:
+
+        String selectedProduct = (String) comboProductos.getSelectedItem();
+        int cantidad = (int) SliderCantidadUnidades.getValue();
+        int stockDisponible = obtenerStockProductoSeleccionado(selectedProduct);
+
+        if (cantidad > stockDisponible) {
+            mensajeStock.setText("No puedes agregar una cantidad mayor al stock disponible");
+            return;
+        }
+
+        agregarProducto(selectedProduct, cantidad);
+
+        // Restar la cantidad agregada al stock disponible
+        int nuevoStock = stockDisponible - cantidad;
+        actualizarStockProductoSeleccionado(nuevoStock);
+
+    }//GEN-LAST:event_botonAgregarProductoMouseClicked
+
+    private void botonHacerPedidoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonHacerPedidoMouseClicked
+        // TODO add your handling code here:
+        restaurarStockEnBaseDeDatos();
+
+        // Limpiar la lista de productos agregados
+        productosAgregados.clear();
+
+    }//GEN-LAST:event_botonHacerPedidoMouseClicked
+
+    private void botonCancelarPedidoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonCancelarPedidoMouseClicked
+        // TODO add your handling code here:
+        DefaultTableModel model = (DefaultTableModel) tablaContenidoPedido.getModel();
+        int rowCount = model.getRowCount();
+        for (int i = rowCount - 1; i >= 0; i--) {
+            model.removeRow(i);
+        }
+
+        ProductoDAO productoDAO = new ProductoDAO();
+        for (Producto producto : productosAgregados) {
+            try {
+                int stockActual = productoDAO.getStockByProductName(producto.getNome());
+                int nuevoStock = stockActual + producto.getStock();
+                productoDAO.actualizarProducto(producto.getId(), "stock", String.valueOf(nuevoStock));
+            } catch (SQLException ex) {
+                Logger.getLogger(PedidoPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        productosAgregados.clear();
+    }//GEN-LAST:event_botonCancelarPedidoMouseClicked
+
+    private void comboProductosItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_comboProductosItemStateChanged
+        // TODO add your handling code here:
+        if (evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
+            String selectedProduct = (String) comboProductos.getSelectedItem();
+            ProductoDAO productoDAO = new ProductoDAO();
+
+            try {
+                stockDisponible = productoDAO.getStockByProductName(selectedProduct);
+                stockProducto.setText(String.valueOf(stockDisponible));
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+
+    }//GEN-LAST:event_comboProductosItemStateChanged
+
+    private void botonEliminarProductoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonEliminarProductoMouseClicked
+        // TODO add your handling code here:
+        int filaSeleccionada = tablaContenidoPedido.getSelectedRow();
+
+        if (filaSeleccionada >= 0) {
+            DefaultTableModel model = (DefaultTableModel) tablaContenidoPedido.getModel();
+            String nombreProducto = (String) model.getValueAt(filaSeleccionada, 0);
+            int cantidadEliminada = (int) model.getValueAt(filaSeleccionada, 1);
+            model.removeRow(filaSeleccionada);
+
+            int stockInicial = obtenerStockProductoSeleccionado(nombreProducto);
+            int stockConProductosEnLaTabla = stockInicial + cantidadEliminada;
+
+            // Actualizar el stock en la etiqueta stockProducto
+            stockProducto.setText(String.valueOf(stockConProductosEnLaTabla));
+
+            // Actualizar el stock en la lista de productos agregados
+            Producto productoSeleccionado = productosAgregados.get(filaSeleccionada);
+            productoSeleccionado.setStock(stockConProductosEnLaTabla);
+
+            // Eliminar el producto de la lista de productos agregados
+            productosAgregados.remove(filaSeleccionada);
+        }
+    }//GEN-LAST:event_botonEliminarProductoMouseClicked
+
+    private int obtenerStockProductoSeleccionado(String nombreProducto) {
+        for (Producto producto : productosAgregados) {
+            if (producto.getNome().equals(nombreProducto)) {
+                return producto.getStock();
+            }
+        }
+
+        // Si el producto no se ha agregado previamente, obtener el stock desde la base de datos
+        ProductoDAO productoDAO = new ProductoDAO();
+        try {
+            return productoDAO.getStockByProductName(nombreProducto);
+        } catch (SQLException ex) {
+            Logger.getLogger(PedidoPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return 0;
+    }
+
+    private void fillComboProductos() {
+        ProductoDAO productoDAO = new ProductoDAO();
+        try {
+            List<Producto> productos = productoDAO.getAllProductos();
+            for (Producto producto : productos) {
+                comboProductos.addItem(producto.getNome());
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private void agregarProducto(String nombreProducto, int cantidad) {
+        ProductoDAO productoDAO = new ProductoDAO();
+        try {
+            Producto producto = productoDAO.getProductoByNombre(nombreProducto);
+            DefaultTableModel model = (DefaultTableModel) tablaContenidoPedido.getModel();
+            model.addRow(new Object[]{nombreProducto, cantidad, producto.getPrezo(), producto.getDesconto(), producto.getIva()});
+
+            // Actualizar el stock en la lista de productos agregados
+            producto.setStock(producto.getStock() - cantidad);
+            productosAgregados.add(producto);
+        } catch (SQLException ex) {
+            Logger.getLogger(PedidoPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void restaurarStockEnBaseDeDatos() {
+        ProductoDAO productoDAO = new ProductoDAO();
+        for (Producto producto : productosAgregados) {
+            productoDAO.actualizarProducto(producto.getId(), "stock", String.valueOf(producto.getStock()));
+        }
+    }
+
+    private int obtenerStockProductoSeleccionado() {
+        String selectedProduct = (String) comboProductos.getSelectedItem();
+        ProductoDAO productoDAO = new ProductoDAO();
+
+        try {
+            int stock = productoDAO.getStockByProductName(selectedProduct);
+            return stock;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+    }
+
+    private void actualizarStockProductoSeleccionado(int nuevoStock) {
+        String selectedProduct = (String) comboProductos.getSelectedItem();
+        stockProducto.setText(String.valueOf(nuevoStock));
+
+        for (Producto producto : productosAgregados) {
+            if (producto.getNome().equals(selectedProduct)) {
+                producto.setStock(nuevoStock);
+                break;
+            }
+        }
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -166,8 +410,11 @@ public class PedidoPanel extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JSlider sliderDescuento;
+    private javax.swing.JSpinner jSpinner1;
+    private javax.swing.JLabel mensajeStock;
+    private javax.swing.JLabel stockProducto;
     private javax.swing.JTable tablaContenidoPedido;
     // End of variables declaration//GEN-END:variables
 }

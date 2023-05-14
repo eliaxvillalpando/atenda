@@ -1,21 +1,32 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package atenda.admin.vistas;
 
-/**
- *
- * @author elias
- */
+import atenda.admin.negocio.Producto;
+import atenda.admin.negocio.ProductoDAO;
+import java.awt.event.ActionEvent;
+import java.util.List;
+import javax.swing.table.DefaultTableModel;
+import java.sql.SQLException;
+import javax.swing.RowFilter;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
+import javax.swing.Timer;
+
 public class ProductosPanel extends javax.swing.JPanel {
+
+    private ProductoDAO productoDAO;
+    private TableRowSorter<TableModel> sorter;
+    private Timer mensajeTimer;
 
     /**
      * Creates new form Productos
      */
     public ProductosPanel() {
         initComponents();
+        inicializarMensajeTimer();
+        productoDAO = new ProductoDAO();
+        actualizarTabla();
+        configurarBusqueda();
+        botonActualizar.setEnabled(false);
     }
 
     /**
@@ -28,24 +39,28 @@ public class ProductosPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        buscarField = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
-        jButton1 = new javax.swing.JButton();
-        jTextField2 = new javax.swing.JTextField();
+        tablaProductosAdmin = new javax.swing.JTable();
+        botonEliminarProducto = new javax.swing.JButton();
         botonExportacion = new javax.swing.JButton();
-        botonNuevoProducto1 = new javax.swing.JButton();
+        botonNuevoProducto = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
+        mensajeProductoAdminLabel = new javax.swing.JLabel();
+        botonActualizar = new javax.swing.JButton();
+        mensajeProductosPanelAdmin = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
 
         jLabel1.setText("Buscar");
 
-        jTextField1.addActionListener(new java.awt.event.ActionListener() {
+        buscarField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextField1ActionPerformed(evt);
+                buscarFieldActionPerformed(evt);
             }
         });
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        tablaProductosAdmin.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null, null},
                 {null, null, null, null, null, null, null},
@@ -53,23 +68,40 @@ public class ProductosPanel extends javax.swing.JPanel {
                 {null, null, null, null, null, null, null}
             },
             new String [] {
-                "Codigo", "Nome", "Coste", "Prezo", "Desconto(%)", "IVA(%) ", "Stok"
+                "Codigo", "Nome", "Coste", "Prezo", "Desconto", "IVA", "Stock"
             }
         ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, true, true, true, true, true, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
-        jScrollPane1.setViewportView(jTable1);
+        tablaProductosAdmin.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                tablaProductosAdminPropertyChange(evt);
+            }
+        });
+        jScrollPane1.setViewportView(tablaProductosAdmin);
 
-        jButton1.setText("Borra");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        botonEliminarProducto.setText("Borra");
+        botonEliminarProducto.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonEliminarProductoMouseClicked(evt);
+            }
+        });
+        botonEliminarProducto.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                botonEliminarProductoActionPerformed(evt);
             }
         });
 
@@ -80,14 +112,25 @@ public class ProductosPanel extends javax.swing.JPanel {
             }
         });
 
-        botonNuevoProducto1.setText("Novo");
-        botonNuevoProducto1.addActionListener(new java.awt.event.ActionListener() {
+        botonNuevoProducto.setText("Novo");
+        botonNuevoProducto.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                botonNuevoProducto1ActionPerformed(evt);
+                botonNuevoProductoActionPerformed(evt);
             }
         });
 
         jButton2.setText("Importación XML");
+
+        botonActualizar.setText("Gardar");
+        botonActualizar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonActualizarMouseClicked(evt);
+            }
+        });
+
+        jLabel2.setText("%");
+
+        jLabel3.setText("%");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -97,29 +140,36 @@ public class ProductosPanel extends javax.swing.JPanel {
                 .addGap(41, 41, 41)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 468, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addGap(18, 18, 18)
-                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addContainerGap(66, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jButton1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(botonEliminarProducto)
+                                .addGap(18, 18, 18)
+                                .addComponent(botonNuevoProducto)))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(botonNuevoProducto1)
-                                .addGap(120, 120, 120))
+                                .addGap(18, 18, 18)
+                                .addComponent(botonActualizar)
+                                .addGap(63, 63, 63)
+                                .addComponent(mensajeProductoAdminLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(115, 115, 115)
-                                .addComponent(botonExportacion, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))))
+                                .addGap(79, 79, 79)
+                                .addComponent(botonExportacion, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(474, 474, 474)
+                        .addComponent(mensajeProductosPanelAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 367, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addGap(18, 18, 18)
+                                .addComponent(buscarField, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(33, 33, 33))
+                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addGap(36, 36, 36)
+                        .addComponent(jLabel2))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 468, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -127,53 +177,184 @@ public class ProductosPanel extends javax.swing.JPanel {
                 .addGap(38, 38, 38)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                    .addComponent(buscarField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(16, 16, 16)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel2))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 253, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(39, 39, 39)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(botonNuevoProducto1))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton2)
-                    .addComponent(botonExportacion))
-                .addGap(42, 42, 42))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(mensajeProductosPanelAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(mensajeProductoAdminLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(botonEliminarProducto)
+                            .addComponent(botonNuevoProducto)
+                            .addComponent(botonActualizar))
+                        .addGap(51, 51, 51)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jButton2)
+                            .addComponent(botonExportacion))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
+    private void buscarFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buscarFieldActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField1ActionPerformed
+        String textoABuscar = buscarField.getText();
+        if (textoABuscar.trim().length() == 0) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + textoABuscar, 1)); // Filtrar por la columna "nome" (índice 1)
+        }
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+
+    }//GEN-LAST:event_buscarFieldActionPerformed
+
+    private void botonEliminarProductoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonEliminarProductoActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_botonEliminarProductoActionPerformed
 
     private void botonExportacionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonExportacionActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_botonExportacionActionPerformed
 
-    private void botonNuevoProducto1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonNuevoProducto1ActionPerformed
+    private void botonNuevoProductoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonNuevoProductoActionPerformed
         // TODO add your handling code here:
 
-        AltaProductoJFrame altaProducto = new AltaProductoJFrame();
+        AltaProductoJFrame altaProducto = new AltaProductoJFrame(this);
         altaProducto.setVisible(true);
 
 
-    }//GEN-LAST:event_botonNuevoProducto1ActionPerformed
+    }//GEN-LAST:event_botonNuevoProductoActionPerformed
+
+    private void tablaProductosAdminPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_tablaProductosAdminPropertyChange
+        // TODO add your handling code here:
+        if (evt.getPropertyName().equals("tableCellEditor")) {
+            botonActualizar.setEnabled(true);
+
+        }
+
+    }//GEN-LAST:event_tablaProductosAdminPropertyChange
+
+    private void botonActualizarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonActualizarMouseClicked
+        // TODO add your handling code here:
+        int fila = tablaProductosAdmin.getSelectedRow();
+        int columna = tablaProductosAdmin.getSelectedColumn();
+
+        if (fila != -1 && columna != -1) {
+            DefaultTableModel model = (DefaultTableModel) tablaProductosAdmin.getModel();
+            Object valor = model.getValueAt(fila, columna);
+
+            if (valor != null) {
+                int id = (int) model.getValueAt(fila, 0);
+                String nombreColumna = tablaProductosAdmin.getColumnName(columna);
+                String valorActual = valor.toString();
+
+                ProductoDAO productoDAO = new ProductoDAO();
+                boolean actualizacionExitosa = productoDAO.actualizarProducto(id, nombreColumna, valorActual);
+
+                if (actualizacionExitosa) {
+                    mensajeProductoAdminLabel.setText("Productos actualizados");
+                    actualizarTabla();
+                    mensajeTimer.restart();
+                } else {
+                    mensajeProductoAdminLabel.setText("Error al actualizar");
+                    mensajeTimer.restart();
+                }
+            }
+        }
+
+
+    }//GEN-LAST:event_botonActualizarMouseClicked
+
+    private void botonEliminarProductoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonEliminarProductoMouseClicked
+        // TODO add your handling code here:
+        int fila = tablaProductosAdmin.getSelectedRow();
+
+        if (fila != -1) {
+            DefaultTableModel model = (DefaultTableModel) tablaProductosAdmin.getModel();
+            int id = (int) model.getValueAt(fila, 0);
+
+            Producto producto = new Producto();
+            producto.setId(id);
+
+            ProductoDAO productoDAO = new ProductoDAO();
+            boolean eliminacionExitosa = productoDAO.eliminarProducto(producto);
+
+            if (eliminacionExitosa) {
+                mensajeProductoAdminLabel.setText("Producto eliminado");
+                model.removeRow(fila); // Elimina la fila de la tabla
+            } else {
+                mensajeProductoAdminLabel.setText("Producto no fue posible eliminar");
+            }
+
+            // Restarte el timer para que el mensaje desaparezca después de un tiempo
+            mensajeTimer.restart();
+        }
+    }//GEN-LAST:event_botonEliminarProductoMouseClicked
+
+    private void actualizarTabla() {
+        ProductoDAO productoDAO = new ProductoDAO();
+
+        try {
+            List<Producto> productos = productoDAO.getAllProductos();
+            DefaultTableModel model = (DefaultTableModel) tablaProductosAdmin.getModel();
+            model.setRowCount(0); // Limpia la tabla antes de rellenarla
+
+            for (Producto producto : productos) {
+                Object[] row = new Object[]{
+                    producto.getId(),
+                    producto.getNome(),
+                    producto.getCoste(),
+                    producto.getPrezo(),
+                    producto.getDesconto(),
+                    producto.getIva(),
+                    producto.getStock()
+                };
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            // Mostrar el error en el mensajeProductoAdminLabel
+            mensajeProductoAdminLabel.setText("Error al actualizar la tabla de productos");
+        }
+    }
+
+    public void actualizarTablaDesdeOtroPanel() {
+        actualizarTabla();
+    }
+
+    private void configurarBusqueda() {
+        DefaultTableModel model = (DefaultTableModel) tablaProductosAdmin.getModel();
+        sorter = new TableRowSorter<>(model);
+        tablaProductosAdmin.setRowSorter(sorter);
+    }
+
+    private void inicializarMensajeTimer() {
+        mensajeTimer = new Timer(5000, (ActionEvent e) -> {
+            mensajeProductoAdminLabel.setText("");
+        });
+        mensajeTimer.setRepeats(false); // Para que el Timer se ejecute una sola vez
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton botonActualizar;
+    private javax.swing.JButton botonEliminarProducto;
     private javax.swing.JButton botonExportacion;
-    private javax.swing.JButton botonNuevoProducto1;
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton botonNuevoProducto;
+    private javax.swing.JTextField buscarField;
     private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
+    private javax.swing.JLabel mensajeProductoAdminLabel;
+    private javax.swing.JLabel mensajeProductosPanelAdmin;
+    private javax.swing.JTable tablaProductosAdmin;
     // End of variables declaration//GEN-END:variables
 }
