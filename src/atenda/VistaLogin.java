@@ -1,7 +1,7 @@
 package atenda;
 
-import atenda.usuarios.Rol;
-import atenda.usuarios.UsuarioDAO;
+import atenda.usuario.negocio.Rol;
+import atenda.usuario.negocio.UsuarioDAO;
 import java.awt.event.KeyEvent;
 
 public class VistaLogin extends javax.swing.JFrame {
@@ -224,6 +224,8 @@ public class VistaLogin extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
+                VistaLogin vistaLogin = new VistaLogin();
+                vistaLogin.pack(); // Ajusta el tamaño de la ventana para acomodar sus componentes
                 new VistaLogin().setVisible(true);
             }
         });

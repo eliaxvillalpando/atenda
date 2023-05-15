@@ -1,7 +1,7 @@
 package atenda.admin.negocio;
 
-import atenda.usuarios.Conexion;
-import atenda.usuarios.Dao;
+import atenda.dao.Conexion;
+import atenda.dao.Dao;
 import java.util.List;
 import java.sql.*;
 import java.util.ArrayList;

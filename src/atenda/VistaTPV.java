@@ -5,11 +5,11 @@
  */
 package atenda;
 
-import atenda.usuarios.UsuarioDAO;
-import atenda.vistas.usuario.DevolucionPanel;
-import atenda.vistas.usuario.InicioPanel;
-import atenda.vistas.usuario.PedidoPanel;
-import atenda.vistas.usuario.UsuarioPanel;
+import atenda.usuario.negocio.UsuarioDAO;
+import atenda.usuario.vistas.DevolucionPanel;
+import atenda.usuario.vistas.InicioPanel;
+import atenda.usuario.vistas.PedidoPanel;
+import atenda.usuario.vistas.UsuarioPanel;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import javax.swing.JPanel;
@@ -62,10 +62,8 @@ public class VistaTPV extends javax.swing.JFrame {
 
     private void mostrarPanel(String panelName) {
         cardLayout.show(cardPanel, panelName);
-        
+
     }
-    
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -182,53 +180,17 @@ public class VistaTPV extends javax.swing.JFrame {
     private void menuSalirMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuSalirMouseClicked
         // TODO add your handling code here:
         new VistaLogin().setVisible(true);
-        VistaTPV.this.setVisible(false);    
+        VistaTPV.this.setVisible(false);
     }//GEN-LAST:event_menuSalirMouseClicked
 
     public void actualizarNombreUsuario(String nombreUsuario) {
-    menuUsuario.setText(nombreUsuario);
-    usuarioPanel.actualizarIdUsuarioLabel();  // Nueva línea
-    
-}
+        menuUsuario.setText(nombreUsuario);
+        usuarioPanel.actualizarIdUsuarioLabel();  // Nueva línea
+
+    }
+
     public String obtenerNombreUsuario() {
-    return menuUsuario.getText();
-}
-
-
-    
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(VistaTPV.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(VistaTPV.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(VistaTPV.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(VistaTPV.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new VistaTPV().setVisible(true);
-            }
-        });
+        return menuUsuario.getText();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

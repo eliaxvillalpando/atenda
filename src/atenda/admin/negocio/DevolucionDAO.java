@@ -5,7 +5,7 @@
  */
 package atenda.admin.negocio;
 
-import atenda.usuarios.Conexion;
+import atenda.dao.Conexion;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

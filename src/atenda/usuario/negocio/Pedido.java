@@ -1,5 +1,5 @@
 package atenda.usuario.negocio;
-import atenda.usuarios.Conexion;
+import atenda.dao.Conexion;
 import java.sql.*;
 
 public class Pedido {

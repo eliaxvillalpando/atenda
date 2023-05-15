@@ -1,9 +1,9 @@
 package atenda.admin.vistas;
 
-import atenda.usuarios.Conexion;
-import atenda.usuarios.Rol;
-import atenda.usuarios.Usuario;
-import atenda.usuarios.UsuarioDAO;
+import atenda.dao.Conexion;
+import atenda.usuario.negocio.Rol;
+import atenda.usuario.negocio.Usuario;
+import atenda.usuario.negocio.UsuarioDAO;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
