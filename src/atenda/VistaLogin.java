@@ -1,7 +1,9 @@
 package atenda;
 
-import atenda.usuario.negocio.Rol;
-import atenda.usuario.negocio.UsuarioDAO;
+import atenda.vista.VistaAdmin;
+import atenda.vista.VistaTPV;
+import atenda.modelo.Rol;
+import atenda.modelo.UsuarioDAO;
 import java.awt.event.KeyEvent;
 
 public class VistaLogin extends javax.swing.JFrame {
