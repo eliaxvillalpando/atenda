@@ -5,8 +5,8 @@
  */
 package atenda.vista;
 
+import atenda.controlador.ModeloDAO;
 import atenda.modelo.Rol;
-import atenda.modelo.UsuarioDAO;
 import javax.swing.JOptionPane;
 
 /**
@@ -19,7 +19,7 @@ public class UsuarioPanel extends javax.swing.JPanel {
      * Creates new form UsuarioPanel
      */
     private VistaTPV vistaTPV;
-    private UsuarioDAO usuarioDao;
+    private ModeloDAO usuarioDao;
 
     public UsuarioPanel(VistaTPV vistaTPV) {
         initComponents();
@@ -29,7 +29,7 @@ public class UsuarioPanel extends javax.swing.JPanel {
 
     public void actualizarIdUsuarioLabel() {
         String idUsuario = vistaTPV.obtenerNombreUsuario();
-        usuarioDao = new UsuarioDAO();
+        usuarioDao = new ModeloDAO();
         int idUser = Integer.parseInt(idUsuario);
         idUsuarioLabel.setText(idUsuario);
         usernameLabel.setText(usuarioDao.obtenerNombreConId(idUser));

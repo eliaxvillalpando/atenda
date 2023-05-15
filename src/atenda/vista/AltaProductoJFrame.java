@@ -1,8 +1,8 @@
 package atenda.vista;
 
 import atenda.modelo.Iva;
+import atenda.controlador.ModeloDAO;
 import atenda.modelo.Producto;
-import atenda.modelo.ProductoDAO;
 import java.awt.Color;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
@@ -252,9 +252,10 @@ switch (selectedIva) {
         nuevoProducto.setBaixa(false); // Asumiendo que baixa inicial es false
 
         // Crear una nueva instancia de ProductoDAO y guardar el nuevo Producto
-        ProductoDAO productoDAO = new ProductoDAO();
+        
+        ModeloDAO modeloDAO = new ModeloDAO();
         try {
-            productoDAO.save(nuevoProducto);
+            modeloDAO.save(nuevoProducto);
             System.out.println("Producto guardado" + nuevoProducto.toString());
             // Limpiar los campos para el próximo ingreso
             nomeProductoField.setText("");

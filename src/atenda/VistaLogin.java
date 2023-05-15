@@ -1,9 +1,9 @@
 package atenda;
 
+import atenda.controlador.ModeloDAO;
 import atenda.vista.VistaAdmin;
 import atenda.vista.VistaTPV;
 import atenda.modelo.Rol;
-import atenda.modelo.UsuarioDAO;
 import java.awt.event.KeyEvent;
 
 public class VistaLogin extends javax.swing.JFrame {
@@ -119,7 +119,7 @@ public class VistaLogin extends javax.swing.JFrame {
     private void botonLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonLoginActionPerformed
         //Llamar al metodo para autenticación
 
-         UsuarioDAO dao = new UsuarioDAO();
+         ModeloDAO dao = new ModeloDAO();
     String user = usuario.getText();
     String pass = new String(contraseña.getPassword());
 

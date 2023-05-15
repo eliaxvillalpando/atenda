@@ -1,8 +1,8 @@
 package atenda.vista;
 
 import atenda.modelo.Iva;
+import atenda.controlador.ModeloDAO;
 import atenda.modelo.Producto;
-import atenda.modelo.ProductoDAO;
 import java.awt.event.ActionEvent;
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
@@ -14,7 +14,7 @@ import javax.swing.Timer;
 
 public class ProductosPanel extends javax.swing.JPanel {
 
-    private ProductoDAO productoDAO;
+    private ModeloDAO productoDAO;
     private TableRowSorter<TableModel> sorter;
     private Timer mensajeTimer;
 
@@ -24,7 +24,7 @@ public class ProductosPanel extends javax.swing.JPanel {
     public ProductosPanel() {
         initComponents();
         inicializarMensajeTimer();
-        productoDAO = new ProductoDAO();
+        productoDAO = new ModeloDAO();
         actualizarTabla();
         configurarBusqueda();
         botonActualizar.setEnabled(false);
@@ -228,7 +228,7 @@ public class ProductosPanel extends javax.swing.JPanel {
                 String nombreColumna = tablaProductosAdmin.getColumnName(columna);
                 String valorActual = valor.toString();
 
-                ProductoDAO productoDAO = new ProductoDAO();
+                ModeloDAO productoDAO = new ModeloDAO();
                 boolean actualizacionExitosa = productoDAO.actualizarProducto(id, nombreColumna, valorActual);
 
                 if (actualizacionExitosa) {
@@ -256,7 +256,7 @@ public class ProductosPanel extends javax.swing.JPanel {
             Producto producto = new Producto();
             producto.setId(id);
 
-            ProductoDAO productoDAO = new ProductoDAO();
+            ModeloDAO productoDAO = new ModeloDAO();
             boolean eliminacionExitosa = productoDAO.eliminarProducto(producto);
 
             if (eliminacionExitosa) {
@@ -272,7 +272,7 @@ public class ProductosPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_botonEliminarProductoMouseClicked
 
     private void actualizarTabla() {
-        ProductoDAO productoDAO = new ProductoDAO();
+        ModeloDAO productoDAO = new ModeloDAO();
 
     try {
         List<Producto> productos = productoDAO.getAllProductos();

@@ -7,10 +7,8 @@ package atenda.vista;
 
 import atenda.modelo.Iva;
 import atenda.modelo.Producto;
-import atenda.modelo.ProductoDAO;
 import atenda.modelo.LineaPedido;
-import atenda.modelo.PedidoDAO;
-import atenda.modelo.UsuarioDAO;
+import atenda.controlador.ModeloDAO;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
@@ -28,8 +26,8 @@ public class VentasPanel extends javax.swing.JPanel {
     /**
      * Creates new form VentasPanel
      */
-    private PedidoDAO pedidoDAO;
-    private UsuarioDAO userDao;
+    private ModeloDAO pedidoDAO;
+    private ModeloDAO userDao;
 
     public VentasPanel() {
         initComponents();
@@ -272,8 +270,8 @@ public class VentasPanel extends javax.swing.JPanel {
         
         
         
-        pedidoDAO = new PedidoDAO();
-        userDao = new UsuarioDAO();
+        pedidoDAO = new ModeloDAO();
+        userDao = new ModeloDAO();
         // Verificar que las fechas sean válidas
         if (fechaDesde == null || fechaHasta == null) {
             JOptionPane.showMessageDialog(null, "Debes seleccionar ambas fechas.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -334,7 +332,7 @@ public class VentasPanel extends javax.swing.JPanel {
             int unidades = lineaPedido.getUnidades();
             double precio = lineaPedido.getPrezo();
             int descuento = lineaPedido.getDesconto();
-            ProductoDAO prodDAO = new ProductoDAO();
+            ModeloDAO prodDAO = new ModeloDAO();
             Producto prod = new Producto();
             try {
                 prod = prodDAO.getProductoByNombre(nombreProducto);

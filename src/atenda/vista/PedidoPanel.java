@@ -1,11 +1,9 @@
 package atenda.vista;
 
 import atenda.modelo.Iva;
+import atenda.controlador.ModeloDAO;
 import atenda.modelo.Producto;
-import atenda.modelo.ProductoDAO;
 import atenda.modelo.Pedido;
-import atenda.modelo.PedidoDAO;
-import atenda.modelo.UsuarioDAO;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -324,10 +322,9 @@ public class PedidoPanel extends javax.swing.JPanel {
 
     private void botonHacerPedidoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonHacerPedidoMouseClicked
 
-        PedidoDAO pedidoDAO = new PedidoDAO();
-        UsuarioDAO userDAO = new UsuarioDAO();
+        ModeloDAO modeloDAO = new ModeloDAO();
 
-        int idPedido = pedidoDAO.getNextPedidoId();
+        int idPedido = modeloDAO.getNextPedidoId();
 
         DefaultTableModel model = (DefaultTableModel) tablaContenidoPedido.getModel();
         int rowCount = model.getRowCount();
@@ -344,10 +341,10 @@ public class PedidoPanel extends javax.swing.JPanel {
             double coste = prezo * unidades;
 
             // Guardar los datos del producto en la base de datos como una fila del pedido
-            boolean pedidoGuardado = pedidoDAO.savePedidoProducto(idPedido, nombreProducto, descuento, unidades, prezo, coste);
+            boolean pedidoGuardado = modeloDAO.savePedidoProducto(idPedido, nombreProducto, descuento, unidades, prezo, coste);
 
             if (pedidoGuardado) {
-                ProductoDAO productoDAO = new ProductoDAO();
+                ModeloDAO productoDAO = new ModeloDAO();
             int idProducto = productoDAO.getIdProductoPorNombre(nombreProducto);
             productoDAO.actualizarStockProducto(idProducto, unidades);
                 mensajeStock.setForeground(Color.GREEN);
@@ -359,7 +356,7 @@ public class PedidoPanel extends javax.swing.JPanel {
             }
 
         }
-        pedidoDAO.savePedido(idPedido, idUsuario, obtenerFechaHoraActual());
+        modeloDAO.savePedido(idPedido, idUsuario, obtenerFechaHoraActual());
 
         // Limpiar la lista de productos agregados
         productosAgregados.clear();
@@ -444,7 +441,7 @@ public class PedidoPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         if (evt != null && evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
             String selectedProduct = (String) comboProductos.getSelectedItem();
-            ProductoDAO productoDAO = new ProductoDAO();
+            ModeloDAO productoDAO = new ModeloDAO();
 
             try {
                 stockDisponible = productoDAO.getStockByProductName(selectedProduct);
@@ -494,7 +491,7 @@ public class PedidoPanel extends javax.swing.JPanel {
         }
 
         // Si el producto no se ha agregado previamente, obtener el stock desde la base de datos
-        ProductoDAO productoDAO = new ProductoDAO();
+        ModeloDAO productoDAO = new ModeloDAO();
         try {
             return productoDAO.getStockByProductName(nombreProducto);
         } catch (SQLException ex) {
@@ -505,7 +502,7 @@ public class PedidoPanel extends javax.swing.JPanel {
     }
 
     private void fillComboProductos() {
-        ProductoDAO productoDAO = new ProductoDAO();
+        ModeloDAO productoDAO = new ModeloDAO();
         try {
             List<Producto> productos = productoDAO.getAllProductos();
             for (Producto producto : productos) {
@@ -526,7 +523,7 @@ public class PedidoPanel extends javax.swing.JPanel {
     }
 
     private void agregarProducto(String nombreProducto, int cantidad) {
-        ProductoDAO productoDAO = new ProductoDAO();
+        ModeloDAO productoDAO = new ModeloDAO();
         try {
             Producto producto = productoDAO.getProductoByNombre(nombreProducto);
             DefaultTableModel model = (DefaultTableModel) tablaContenidoPedido.getModel();
@@ -543,7 +540,7 @@ public class PedidoPanel extends javax.swing.JPanel {
     }
 
     private void restaurarStockEnBaseDeDatos() {
-        ProductoDAO productoDAO = new ProductoDAO();
+        ModeloDAO productoDAO = new ModeloDAO();
         for (Producto producto : productosAgregados) {
             productoDAO.actualizarProducto(producto.getId(), "stock", String.valueOf(producto.getStock()));
         }
@@ -551,7 +548,7 @@ public class PedidoPanel extends javax.swing.JPanel {
 
     private int obtenerStockProductoSeleccionado() {
         String selectedProduct = (String) comboProductos.getSelectedItem();
-        ProductoDAO productoDAO = new ProductoDAO();
+        ModeloDAO productoDAO = new ModeloDAO();
 
         try {
             int stock = productoDAO.getStockByProductName(selectedProduct);
@@ -614,7 +611,7 @@ public class PedidoPanel extends javax.swing.JPanel {
 }
 
 private void agregarProducto(String nombreProducto, int cantidad, int descuento) {
-    ProductoDAO productoDAO = new ProductoDAO();
+    ModeloDAO productoDAO = new ModeloDAO();
     try {
         Producto producto = productoDAO.getProductoByNombre(nombreProducto);
         double precioConDescuento = calcularPrecioConDescuento(producto.getPrezo(), descuento);

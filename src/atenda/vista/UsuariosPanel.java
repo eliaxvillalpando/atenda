@@ -1,9 +1,9 @@
 package atenda.vista;
 
 import atenda.controlador.Conexion;
+import atenda.controlador.ModeloDAO;
 import atenda.modelo.Rol;
 import atenda.modelo.Usuario;
-import atenda.modelo.UsuarioDAO;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -22,7 +22,7 @@ public class UsuariosPanel extends javax.swing.JPanel {
     /**
      * Creates new form UsuariosPanel
      */
-    private UsuarioDAO daoUsuario;
+    private ModeloDAO modeloDAO;
     private boolean nuevoUsuario;
 
     public UsuariosPanel() {
@@ -30,7 +30,7 @@ public class UsuariosPanel extends javax.swing.JPanel {
         String[] roles = {"ADMINISTRADOR", "DEPENDENTE"};
         // Establecer el arreglo como modelo del combo box
         comboRol.setModel(new DefaultComboBoxModel<>(roles));
-        daoUsuario = new UsuarioDAO();
+        modeloDAO =  new ModeloDAO();
         mostrarUsuarios();
         habilitarCampos(false);
     }
@@ -106,7 +106,7 @@ public class UsuariosPanel extends javax.swing.JPanel {
         int selectedRow = tablaUsuariosAdmin.getSelectedRow();
         if (selectedRow != -1) {
             String selectedUser = (String) tablaUsuariosAdmin.getValueAt(selectedRow, 0);
-            Usuario usuario = daoUsuario.obtenerUsuario(selectedUser);
+            Usuario usuario = modeloDAO.obtenerUsuario(selectedUser);
 
             if (usuario != null) {
                 // Obtener los datos del usuario de los campos de texto
@@ -131,7 +131,7 @@ public class UsuariosPanel extends javax.swing.JPanel {
                 usuario.setAvatar("/path/to/avatar");
 
                 // Actualizar el usuario en la base de datos
-                daoUsuario.update(usuario);
+                modeloDAO.update(usuario);
 
                 // Llenar los campos con los nuevos datos del usuario actualizado
                 llenarCampos(usuario);
@@ -182,7 +182,7 @@ public class UsuariosPanel extends javax.swing.JPanel {
         nuevoUsuario.setAvatar("/path/to/avatar");
 
         // Guardar el nuevo usuario en la base de datos
-        daoUsuario.saveUsuario(nuevoUsuario);
+        modeloDAO.saveUsuario(nuevoUsuario);
 
         // Mostrar mensaje de éxito
         etiquetaMensaje.setText("Usuario creado exitosamente");
@@ -400,7 +400,7 @@ public class UsuariosPanel extends javax.swing.JPanel {
             // Obtiene el valor de la columna de usuario en la fila seleccionada
             String selectedUser = (String) tablaUsuariosAdmin.getValueAt(selectedRow, 0);
             // Obtener los datos del usuario de la base de datos
-            Usuario usuario = daoUsuario.obtenerUsuario(selectedUser);
+            Usuario usuario = modeloDAO.obtenerUsuario(selectedUser);
             // Rellena los campos con los valores obtenidos
             llenarCampos(usuario);
         }
@@ -433,11 +433,11 @@ public class UsuariosPanel extends javax.swing.JPanel {
         String nombreUsuario = (String) tablaUsuariosAdmin.getValueAt(selectedRow, 0);
         
         // Obtener el objeto Usuario desde la base de datos
-        Usuario usuario = daoUsuario.obtenerUsuario(nombreUsuario);
+        Usuario usuario = modeloDAO.obtenerUsuario(nombreUsuario);
         
         if (usuario != null) {
             // Intentar eliminar el usuario de la base de datos
-            boolean fueEliminado = daoUsuario.eliminarPorId(usuario.getIdUsuario());
+            boolean fueEliminado = modeloDAO.eliminarPorId(usuario.getIdUsuario());
             
             if (fueEliminado) {
                 // Mostrar mensaje de éxito

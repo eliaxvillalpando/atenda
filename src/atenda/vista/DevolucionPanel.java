@@ -6,13 +6,13 @@
 package atenda.vista;
 
 import atenda.modelo.Devolucion;
-import atenda.modelo.DevolucionDAO;
+
 import atenda.modelo.Iva;
 import atenda.modelo.Producto;
-import atenda.modelo.ProductoDAO;
 import atenda.modelo.LineaPedido;
-import atenda.modelo.PedidoDAO;
-import atenda.modelo.UsuarioDAO;
+import atenda.controlador.ModeloDAO;
+
+
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -28,10 +28,7 @@ import javax.swing.table.DefaultTableModel;
  */
 public class DevolucionPanel extends javax.swing.JPanel {
 
-    private PedidoDAO pedidoDAO;
-    private ProductoDAO productoDAO;
-    private DevolucionDAO devolucionDAO;
-    private UsuarioDAO userDao;
+    private ModeloDAO modeloDAO;
     private VistaTPV vistaTPV;
 
     /**
@@ -39,14 +36,14 @@ public class DevolucionPanel extends javax.swing.JPanel {
      */
     public DevolucionPanel(VistaTPV vistaTPV) {
         initComponents();
-        pedidoDAO = new PedidoDAO();
-        devolucionDAO = new DevolucionDAO();
+        modeloDAO = new ModeloDAO();
+        modeloDAO = new ModeloDAO();
         this.vistaTPV = vistaTPV;
-        List<String> pedidoRecords = pedidoDAO.getPedidoRecords();
+        List<String> pedidoRecords = modeloDAO.getPedidoRecords();
         for (String record : pedidoRecords) {
             comboPedidos.addItem(record);
         }
-        List<Devolucion> devoluciones = devolucionDAO.getDevoluciones();
+        List<Devolucion> devoluciones = modeloDAO.getDevoluciones();
         DefaultTableModel model = (DefaultTableModel) tablaDevolucionesAnteriores.getModel();
         for (Devolucion devolucion : devoluciones) {
             Object[] rowData = {
@@ -277,13 +274,13 @@ public class DevolucionPanel extends javax.swing.JPanel {
         DefaultTableModel model = (DefaultTableModel) tablaSeleccionaProducto.getModel();
         model.setRowCount(0); // Limpiar filas existentes
 
-        List<LineaPedido> lineasPedido = pedidoDAO.obtenerLineasPedidoPorIdPedido(idPedido);
+        List<LineaPedido> lineasPedido = modeloDAO.obtenerLineasPedidoPorIdPedido(idPedido);
         for (LineaPedido lineaPedido : lineasPedido) {
-            String nombreProducto = pedidoDAO.obtenerNombreProductoPorId(lineaPedido.getId_producto());
+            String nombreProducto = modeloDAO.obtenerNombreProductoPorId(lineaPedido.getId_producto());
             int unidades = lineaPedido.getUnidades();
             double precio = lineaPedido.getPrezo();
             int descuento = lineaPedido.getDesconto();
-            ProductoDAO prodDAO = new ProductoDAO();
+            ModeloDAO prodDAO = new ModeloDAO();
             Producto prod = new Producto();
             try {
                 prod = prodDAO.getProductoByNombre(nombreProducto);
@@ -333,9 +330,9 @@ public class DevolucionPanel extends javax.swing.JPanel {
     private void botonHacerDevolucionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonHacerDevolucionMouseClicked
         // TODO add your handling code here:
         DefaultTableModel modelProductosDevueltos = (DefaultTableModel) tablaProductosDevueltos.getModel();
-        DevolucionDAO devolucionesDAO = new DevolucionDAO();
-        userDao = new UsuarioDAO();
-        productoDAO =  new ProductoDAO();
+        ModeloDAO devolucionesDAO = new ModeloDAO();
+        modeloDAO = new ModeloDAO();
+        
 
         for (int i = 0; i < modelProductosDevueltos.getRowCount(); i++) {
         String nombreProducto = (String) modelProductosDevueltos.getValueAt(i, 0);
@@ -351,14 +348,14 @@ public class DevolucionPanel extends javax.swing.JPanel {
 
         String user = vistaTPV.menuUsuario.getText();
         int userInt = Integer.parseInt(user);
-        String dependente = userDao.obtenerNombreConId(userInt);
+        String dependente = modeloDAO.obtenerNombreConId(userInt);
 
-        int idProducto = productoDAO.getIdProductoPorNombre(nombreProducto);
+        int idProducto = modeloDAO.getIdProductoPorNombre(nombreProducto);
 
         devolucionesDAO.guardarDevolucion(idPedido, dependente, unidades, idProducto, obtenerFechaHoraActual());
 
         // Verificar las unidades
-        int unidadesOriginal = productoDAO.getUnidadesOriginal(idProducto);
+        int unidadesOriginal = modeloDAO.getUnidadesOriginal(idProducto);
         if (unidades < 0) {
             JOptionPane.showMessageDialog(null, "Las unidades no pueden ser negativas.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
@@ -368,7 +365,7 @@ public class DevolucionPanel extends javax.swing.JPanel {
             return;
         }
 
-        boolean isUpdated = pedidoDAO.updateLineaPedidoForDevolucion(idPedido, idProducto, unidades, coste);
+        boolean isUpdated = modeloDAO.updateLineaPedidoForDevolucion(idPedido, idProducto, unidades, coste);
         
         if (!isUpdated) {
             JOptionPane.showMessageDialog(null, "Error al actualizar la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -383,7 +380,7 @@ public class DevolucionPanel extends javax.swing.JPanel {
         DefaultTableModel modelDevolucionesAnteriores = (DefaultTableModel) tablaDevolucionesAnteriores.getModel();
     modelDevolucionesAnteriores.setRowCount(0); // Limpiar filas existentes
     
-    List<Devolucion> devoluciones = devolucionDAO.getDevoluciones();
+    List<Devolucion> devoluciones = modeloDAO.getDevoluciones();
     for (Devolucion devolucion : devoluciones) {
         Object[] rowData = {
             devolucion.getId_pedido(),
@@ -408,7 +405,7 @@ public class DevolucionPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         DefaultTableModel modelProductosDevueltos = (DefaultTableModel) tablaProductosDevueltos.getModel();
         DefaultTableModel modelSeleccionaProducto = (DefaultTableModel) tablaSeleccionaProducto.getModel();
-        productoDAO = new ProductoDAO();
+        modeloDAO = new ModeloDAO();
 
         // Mover todas las filas de tablaProductosDevueltos a tablaSeleccionaProducto
         for (int i = 0; i < modelProductosDevueltos.getRowCount(); i++) {
@@ -421,8 +418,8 @@ public class DevolucionPanel extends javax.swing.JPanel {
             String nombreProducto = (String) rowData[0]; // asumiendo que el nombre del producto está en la primera columna
 
             // Obtén las unidades originales del producto
-            int idProducto = productoDAO.getIdProductoPorNombre(nombreProducto);
-            int unidadesOriginales = productoDAO.getUnidadesOriginal(idProducto);
+            int idProducto = modeloDAO.getIdProductoPorNombre(nombreProducto);
+            int unidadesOriginales = modeloDAO.getUnidadesOriginal(idProducto);
 
             // Actualiza las unidades en rowData a las unidades originales
             rowData[1] = unidadesOriginales; // asumiendo que las unidades están en la segunda columna

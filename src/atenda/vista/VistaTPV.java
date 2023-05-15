@@ -6,7 +6,6 @@
 package atenda.vista;
 
 import atenda.VistaLogin;
-import atenda.modelo.UsuarioDAO;
 import atenda.vista.DevolucionPanel;
 import atenda.vista.InicioPanel;
 import atenda.vista.PedidoPanel;
