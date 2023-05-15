@@ -5,6 +5,79 @@ import java.sql.*;
 
 public class UsuarioDAO implements Dao<Usuario> {
 
+    private static int idClienteActual; // Variable estática para almacenar el ID del cliente actual
+
+    public static int getIdClienteActual() {
+        return idClienteActual;
+    }
+
+    public static void setIdClienteActual(int idCliente) {
+        idClienteActual = idCliente;
+    }
+
+    public int obtenerIdClientePorUsuario(String usuario) {
+        int idCliente = 0;
+
+        try (Connection conn = Conexion.getConnection()) {
+            String query = "SELECT id FROM usuario WHERE nome = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, usuario);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        idCliente = resultSet.getInt("id");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener el ID del cliente por usuario: " + e.getMessage());
+        }
+
+        return idCliente;
+    }
+
+    public String getNombreUsuario(String usuario) {
+        String nombreUsuario = "";
+
+        try (Connection conn = Conexion.getConnection()) {
+            String query = "SELECT nome FROM usuario WHERE username = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, usuario);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        nombreUsuario = resultSet.getString("nome");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener el nombre de usuario: " + e.getMessage());
+        }
+
+        return nombreUsuario;
+    }
+
+    public int obtenerIdUsuario(String usuario) {
+        int idUsuario = 0;
+
+        try (Connection conn = Conexion.getConnection()) {
+            String query = "SELECT id FROM usuario WHERE username = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setString(1, usuario);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        idUsuario = resultSet.getInt("id");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener el ID de usuario: " + e.getMessage());
+        }
+
+        return idUsuario;
+    }
+
     @Override
     public Usuario get(int id) {
         // Implementar la lógica para obtener un usuario
@@ -122,6 +195,7 @@ public class UsuarioDAO implements Dao<Usuario> {
                 usuario.setPassword(rs.getString("password"));
                 usuario.setNome(rs.getString("nome"));
                 String rolString = rs.getString("rol");
+                usuario.setIdUsuario(rs.getInt("id"));
                 Rol rol = Rol.valueOf(rolString.toUpperCase());
                 usuario.setRol(rol);
             }
@@ -133,5 +207,122 @@ public class UsuarioDAO implements Dao<Usuario> {
         return usuario;
     }
 
-    //Metodo para autenticación
+    public String obtenerNombreConId(int idUsuario) {
+        String nombreUsuario = null;
+
+        try (Connection conn = Conexion.getConnection()) {
+            String query = "SELECT nome FROM usuario WHERE id = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setInt(1, idUsuario);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        nombreUsuario = resultSet.getString("nome");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener el nombre de usuario: " + e.getMessage());
+        }
+
+        return nombreUsuario;
+    }
+
+    public String obtenerRol(String username) {
+        String sql = "SELECT rol FROM usuario WHERE username = ?";
+        String rol = null;
+
+        try (Connection conn = Conexion.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                rol = rs.getString("rol");
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return rol;
+    }
+
+    public String obtenerUserNameConId(int idUsuario) {
+        String nombreUsuario = null;
+
+        try (Connection conn = Conexion.getConnection()) {
+            String query = "SELECT username FROM usuario WHERE id = ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setInt(1, idUsuario);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        nombreUsuario = resultSet.getString("username");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener el nombre de usuario: " + e.getMessage());
+        }
+
+        return nombreUsuario;
+    }
+
+    public String obtenerRolconID(int id) {
+        String sql = "SELECT rol FROM usuario WHERE id = ?";
+        String rol = null;
+
+        try (Connection conn = Conexion.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, id);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                rol = rs.getString("rol");
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return rol;
+    }
+
+    public void cambiarContraseña(int id, String nuevaContraseña) {
+        String sql = "UPDATE usuario SET password = ? WHERE id = ?";
+
+        try (Connection conn = Conexion.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, nuevaContraseña);
+            pstmt.setInt(2, id);
+
+            pstmt.executeUpdate();
+
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+    
+    public boolean eliminarPorId(int id) {
+        String sql = "DELETE FROM usuario WHERE id = ?";
+
+        try (Connection conn = Conexion.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, id);
+            int rowsAffected = pstmt.executeUpdate();
+
+            return rowsAffected > 0;  // Devuelve true si se eliminó algún registro
+
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            return false;  // Devuelve false si hubo algún error
+        }
+    }
+
 }

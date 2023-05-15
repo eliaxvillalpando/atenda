@@ -5,17 +5,59 @@
  */
 package atenda.vistas.usuario;
 
+import atenda.VistaTPV;
+import atenda.admin.negocio.Devolucion;
+import atenda.admin.negocio.DevolucionDAO;
+import atenda.admin.negocio.Producto;
+import atenda.admin.negocio.ProductoDAO;
+import atenda.usuario.negocio.LineaPedido;
+import atenda.usuario.negocio.PedidoDAO;
+import atenda.usuarios.UsuarioDAO;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
 /**
  *
  * @author elias
  */
 public class DevolucionPanel extends javax.swing.JPanel {
 
+    private PedidoDAO pedidoDAO;
+    private ProductoDAO productoDAO;
+    private DevolucionDAO devolucionDAO;
+    private UsuarioDAO userDao;
+    private VistaTPV vistaTPV;
+
     /**
      * Creates new form DevolucionPanel
      */
-    public DevolucionPanel() {
+    public DevolucionPanel(VistaTPV vistaTPV) {
         initComponents();
+        pedidoDAO = new PedidoDAO();
+        devolucionDAO = new DevolucionDAO();
+        this.vistaTPV = vistaTPV;
+        List<String> pedidoRecords = pedidoDAO.getPedidoRecords();
+        for (String record : pedidoRecords) {
+            comboPedidos.addItem(record);
+        }
+        List<Devolucion> devoluciones = devolucionDAO.getDevoluciones();
+        DefaultTableModel model = (DefaultTableModel) tablaDevolucionesAnteriores.getModel();
+        for (Devolucion devolucion : devoluciones) {
+            Object[] rowData = {
+                devolucion.getId_pedido(),
+                devolucion.getFecha(),
+                devolucion.getDependente(),
+                devolucion.getUnidades()
+            };
+            model.addRow(rowData);
+        }
+
     }
 
     /**
@@ -39,12 +81,25 @@ public class DevolucionPanel extends javax.swing.JPanel {
         jScrollPane3 = new javax.swing.JScrollPane();
         tablaDevolucionesAnteriores = new javax.swing.JTable();
         botonHacerDevolucion = new javax.swing.JButton();
-        botonDevolverUnidades = new javax.swing.JButton();
         botonCancelarDevolucion = new javax.swing.JButton();
-        jLabel5 = new javax.swing.JLabel();
-        jSpinner1 = new javax.swing.JSpinner();
 
         jLabel1.setText("1 - Seleccione pedido");
+
+        comboPedidos.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                comboPedidosItemStateChanged(evt);
+            }
+        });
+        comboPedidos.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                comboPedidosMouseClicked(evt);
+            }
+        });
+        comboPedidos.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboPedidosActionPerformed(evt);
+            }
+        });
 
         jLabel2.setText("2 - Seleccione produto");
 
@@ -59,12 +114,24 @@ public class DevolucionPanel extends javax.swing.JPanel {
                 "Produto", "Uds", "Prezo", "Desc (%)", "IVA (%)"
             }
         ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Integer.class, java.lang.Integer.class
+            };
             boolean[] canEdit = new boolean [] {
                 false, false, false, false, false
             };
 
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
+            }
+        });
+        tablaSeleccionaProducto.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tablaSeleccionaProductoMouseClicked(evt);
             }
         });
         jScrollPane1.setViewportView(tablaSeleccionaProducto);
@@ -73,18 +140,22 @@ public class DevolucionPanel extends javax.swing.JPanel {
 
         tablaProductosDevueltos.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
                 "Produto", "Uds", "Prezo ()", "Desc (%)", "IVA (%)"
             }
         ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Integer.class, java.lang.Integer.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, true, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
@@ -96,18 +167,22 @@ public class DevolucionPanel extends javax.swing.JPanel {
 
         tablaDevolucionesAnteriores.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
                 "Pedido", "Data", "Dependente", "Uds"
             }
         ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class
+            };
             boolean[] canEdit = new boolean [] {
                 false, false, true, false
             };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
@@ -116,12 +191,18 @@ public class DevolucionPanel extends javax.swing.JPanel {
         jScrollPane3.setViewportView(tablaDevolucionesAnteriores);
 
         botonHacerDevolucion.setText("Tramitar devolución");
-
-        botonDevolverUnidades.setText("Devolver unidades");
+        botonHacerDevolucion.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonHacerDevolucionMouseClicked(evt);
+            }
+        });
 
         botonCancelarDevolucion.setText("Cancelar devolución");
-
-        jLabel5.setText("Unidades que se poden devolver");
+        botonCancelarDevolucion.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonCancelarDevolucionMouseClicked(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -131,16 +212,12 @@ public class DevolucionPanel extends javax.swing.JPanel {
                 .addGap(39, 39, 39)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(11, 11, 11)
-                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 359, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(botonHacerDevolucion, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 163, Short.MAX_VALUE)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(comboPedidos, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 66, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(11, 11, 11)
+                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 359, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jLabel2)
                             .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
@@ -148,15 +225,13 @@ public class DevolucionPanel extends javax.swing.JPanel {
                             .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                         .addGap(25, 25, 25))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(botonCancelarDevolucion, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 276, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                .addComponent(botonDevolverUnidades, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                        .addGap(129, 129, 129))))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(botonHacerDevolucion, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 163, Short.MAX_VALUE)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(comboPedidos, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(18, 18, 18)
+                        .addComponent(botonCancelarDevolucion, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(506, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -174,40 +249,196 @@ public class DevolucionPanel extends javax.swing.JPanel {
                         .addGap(18, 18, 18)
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 445, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(botonHacerDevolucion))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(botonHacerDevolucion)
+                            .addComponent(botonCancelarDevolucion)))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 219, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(19, 19, 19)
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel5)
-                            .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(17, 17, 17)
-                        .addComponent(botonDevolverUnidades)
-                        .addGap(18, 18, 18)
-                        .addComponent(botonCancelarDevolucion)))
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(67, 67, 67))
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void comboPedidosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_comboPedidosMouseClicked
+        // TODO add your handling code here:
+
+
+    }//GEN-LAST:event_comboPedidosMouseClicked
+
+    private void comboPedidosItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_comboPedidosItemStateChanged
+        // TODO add your handling code here:
+        String pedidoSeleccionado = comboPedidos.getSelectedItem().toString();
+        String[] pedidoInfo = pedidoSeleccionado.split(" ");
+        int idPedido = Integer.parseInt(pedidoInfo[0]);
+
+        DefaultTableModel model = (DefaultTableModel) tablaSeleccionaProducto.getModel();
+        model.setRowCount(0); // Limpiar filas existentes
+
+        List<LineaPedido> lineasPedido = pedidoDAO.obtenerLineasPedidoPorIdPedido(idPedido);
+        for (LineaPedido lineaPedido : lineasPedido) {
+            String nombreProducto = pedidoDAO.obtenerNombreProductoPorId(lineaPedido.getId_producto());
+            int unidades = lineaPedido.getUnidades();
+            double precio = lineaPedido.getPrezo();
+            int descuento = lineaPedido.getDesconto();
+            ProductoDAO prodDAO = new ProductoDAO();
+            Producto prod = new Producto();
+            try {
+                prod = prodDAO.getProductoByNombre(nombreProducto);
+            } catch (SQLException ex) {
+                Logger.getLogger(DevolucionPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            int iva = prod.getIva();
+            Object[] rowData = {nombreProducto, unidades, precio, descuento, iva};
+            model.addRow(rowData);
+        }
+
+    }//GEN-LAST:event_comboPedidosItemStateChanged
+
+    private void tablaSeleccionaProductoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaSeleccionaProductoMouseClicked
+        // TODO add your handling code here:
+        int selectedRow = tablaSeleccionaProducto.getSelectedRow();
+        if (selectedRow != -1) { // Asegurarse de que se ha seleccionado una fila
+            DefaultTableModel modelSeleccionaProducto = (DefaultTableModel) tablaSeleccionaProducto.getModel();
+            DefaultTableModel modelProductosDevueltos = (DefaultTableModel) tablaProductosDevueltos.getModel();
+
+            // Obtener datos de la fila seleccionada
+            Object[] selectedRowData = new Object[modelSeleccionaProducto.getColumnCount()];
+            for (int i = 0; i < modelSeleccionaProducto.getColumnCount(); i++) {
+                selectedRowData[i] = modelSeleccionaProducto.getValueAt(selectedRow, i);
+            }
+
+            // Agregar la fila seleccionada a la tabla de productos devueltos
+            modelProductosDevueltos.addRow(selectedRowData);
+
+            // Remover la fila seleccionada de la tabla de selección de productos
+            modelSeleccionaProducto.removeRow(selectedRow);
+        }
+
+    }//GEN-LAST:event_tablaSeleccionaProductoMouseClicked
+
+    private void botonHacerDevolucionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonHacerDevolucionMouseClicked
+        // TODO add your handling code here:
+        DefaultTableModel modelProductosDevueltos = (DefaultTableModel) tablaProductosDevueltos.getModel();
+        DevolucionDAO devolucionesDAO = new DevolucionDAO();
+        userDao = new UsuarioDAO();
+        productoDAO =  new ProductoDAO();
+
+        for (int i = 0; i < modelProductosDevueltos.getRowCount(); i++) {
+        String nombreProducto = (String) modelProductosDevueltos.getValueAt(i, 0);
+        int unidadesIniciales = (Integer) tablaSeleccionaProducto.getValueAt(i, 1);
+        int unidadesModificadas = (Integer) modelProductosDevueltos.getValueAt(i, 1);
+        int unidades = unidadesIniciales - unidadesModificadas;
+        double precio = (Double) modelProductosDevueltos.getValueAt(i, 2);
+        double coste = unidades * precio;
+
+        String pedidoSeleccionado = comboPedidos.getSelectedItem().toString();
+        String[] pedidoInfo = pedidoSeleccionado.split(" ");
+        int idPedido = Integer.parseInt(pedidoInfo[0]);
+
+        String user = vistaTPV.menuUsuario.getText();
+        int userInt = Integer.parseInt(user);
+        String dependente = userDao.obtenerNombreConId(userInt);
+
+        int idProducto = productoDAO.getIdProductoPorNombre(nombreProducto);
+
+        devolucionesDAO.guardarDevolucion(idPedido, dependente, unidades, idProducto, obtenerFechaHoraActual());
+
+        // Verificar las unidades
+        int unidadesOriginal = productoDAO.getUnidadesOriginal(idProducto);
+        if (unidades < 0) {
+            JOptionPane.showMessageDialog(null, "Las unidades no pueden ser negativas.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (unidades > unidadesOriginal) {
+            JOptionPane.showMessageDialog(null, "Las unidades no pueden ser mayores que la cantidad original.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        boolean isUpdated = pedidoDAO.updateLineaPedidoForDevolucion(idPedido, idProducto, unidades, coste);
+        
+        if (!isUpdated) {
+            JOptionPane.showMessageDialog(null, "Error al actualizar la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+    }
+
+        modelProductosDevueltos.setRowCount(0);
+        JOptionPane.showMessageDialog(null, "La devolución se ha tramitado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        comboPedidosItemStateChanged(null);
+        
+        DefaultTableModel modelDevolucionesAnteriores = (DefaultTableModel) tablaDevolucionesAnteriores.getModel();
+    modelDevolucionesAnteriores.setRowCount(0); // Limpiar filas existentes
+    
+    List<Devolucion> devoluciones = devolucionDAO.getDevoluciones();
+    for (Devolucion devolucion : devoluciones) {
+        Object[] rowData = {
+            devolucion.getId_pedido(),
+            devolucion.getFecha(),
+            devolucion.getDependente(),
+            devolucion.getUnidades()
+        };
+        modelDevolucionesAnteriores.addRow(rowData);
+    }
+    }//GEN-LAST:event_botonHacerDevolucionMouseClicked
+
+    private String obtenerFechaHoraActual() {
+        // Obtener la fecha y hora actual
+        LocalDateTime now = LocalDateTime.now();
+
+        // Formatear la fecha y hora en el formato deseado: "YYYY-MM-DD HH:MM:SS"
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return now.format(formatter);
+    }
+
+    private void botonCancelarDevolucionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonCancelarDevolucionMouseClicked
+        // TODO add your handling code here:
+        DefaultTableModel modelProductosDevueltos = (DefaultTableModel) tablaProductosDevueltos.getModel();
+        DefaultTableModel modelSeleccionaProducto = (DefaultTableModel) tablaSeleccionaProducto.getModel();
+        productoDAO = new ProductoDAO();
+
+        // Mover todas las filas de tablaProductosDevueltos a tablaSeleccionaProducto
+        for (int i = 0; i < modelProductosDevueltos.getRowCount(); i++) {
+            Object[] rowData = new Object[modelProductosDevueltos.getColumnCount()];
+            for (int j = 0; j < modelProductosDevueltos.getColumnCount(); j++) {
+                rowData[j] = modelProductosDevueltos.getValueAt(i, j);
+            }
+
+            // Obtén el nombre del producto
+            String nombreProducto = (String) rowData[0]; // asumiendo que el nombre del producto está en la primera columna
+
+            // Obtén las unidades originales del producto
+            int idProducto = productoDAO.getIdProductoPorNombre(nombreProducto);
+            int unidadesOriginales = productoDAO.getUnidadesOriginal(idProducto);
+
+            // Actualiza las unidades en rowData a las unidades originales
+            rowData[1] = unidadesOriginales; // asumiendo que las unidades están en la segunda columna
+
+            modelSeleccionaProducto.addRow(rowData);
+        }
+
+        // Limpiar tablaProductosDevueltos
+        modelProductosDevueltos.setRowCount(0);
+    }//GEN-LAST:event_botonCancelarDevolucionMouseClicked
+
+    private void comboPedidosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboPedidosActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_comboPedidosActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton botonCancelarDevolucion;
-    private javax.swing.JButton botonDevolverUnidades;
     private javax.swing.JButton botonHacerDevolucion;
     private javax.swing.JComboBox<String> comboPedidos;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JSpinner jSpinner1;
     private javax.swing.JTable tablaDevolucionesAnteriores;
     private javax.swing.JTable tablaProductosDevueltos;
     private javax.swing.JTable tablaSeleccionaProducto;

@@ -214,7 +214,7 @@ public class UsuariosPanel extends javax.swing.JPanel {
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        botonEliminarUsuario = new javax.swing.JButton();
         botonNuevoUsuario = new javax.swing.JButton();
         botonGuardar = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
@@ -264,10 +264,15 @@ public class UsuariosPanel extends javax.swing.JPanel {
 
         jLabel5.setText("Rol");
 
-        jButton1.setText("Eliminar");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        botonEliminarUsuario.setText("Eliminar");
+        botonEliminarUsuario.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonEliminarUsuarioMouseClicked(evt);
+            }
+        });
+        botonEliminarUsuario.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                botonEliminarUsuarioActionPerformed(evt);
             }
         });
 
@@ -301,7 +306,7 @@ public class UsuariosPanel extends javax.swing.JPanel {
                         .addGap(30, 30, 30)
                         .addComponent(botonGuardar)
                         .addGap(18, 18, 18)
-                        .addComponent(jButton1)
+                        .addComponent(botonEliminarUsuario)
                         .addContainerGap())
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 157, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -324,12 +329,11 @@ public class UsuariosPanel extends javax.swing.JPanel {
                                 .addGap(50, 50, 50)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addComponent(etiquetaMensaje, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(textFieldNome, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
-                                        .addComponent(textFieldUsername)
-                                        .addComponent(textFieldContraseña)
-                                        .addComponent(textFieldRContraseña, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
-                                        .addComponent(comboRol, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                    .addComponent(textFieldNome, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
+                                    .addComponent(textFieldUsername)
+                                    .addComponent(textFieldContraseña)
+                                    .addComponent(textFieldRContraseña, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
+                                    .addComponent(comboRol, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                 .addGap(62, 62, 62))))))
         );
         layout.setVerticalGroup(
@@ -368,7 +372,7 @@ public class UsuariosPanel extends javax.swing.JPanel {
                     .addGroup(layout.createSequentialGroup()
                         .addGap(37, 37, 37)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton1)
+                            .addComponent(botonEliminarUsuario)
                             .addComponent(botonNuevoUsuario)
                             .addComponent(botonGuardar)))
                     .addGroup(layout.createSequentialGroup()
@@ -378,9 +382,9 @@ public class UsuariosPanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void botonEliminarUsuarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonEliminarUsuarioActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_botonEliminarUsuarioActionPerformed
 
     private void botonNuevoUsuarioMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonNuevoUsuarioMouseClicked
         // TODO add your handling code here:
@@ -421,13 +425,43 @@ public class UsuariosPanel extends javax.swing.JPanel {
 
     }//GEN-LAST:event_botonGuardarMouseClicked
 
+    private void botonEliminarUsuarioMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonEliminarUsuarioMouseClicked
+        // TODO add your handling code here:
+         int selectedRow = tablaUsuariosAdmin.getSelectedRow();
+    if (selectedRow != -1) {
+        // Obtener el nombre del usuario seleccionado en la tabla
+        String nombreUsuario = (String) tablaUsuariosAdmin.getValueAt(selectedRow, 0);
+        
+        // Obtener el objeto Usuario desde la base de datos
+        Usuario usuario = daoUsuario.obtenerUsuario(nombreUsuario);
+        
+        if (usuario != null) {
+            // Intentar eliminar el usuario de la base de datos
+            boolean fueEliminado = daoUsuario.eliminarPorId(usuario.getIdUsuario());
+            
+            if (fueEliminado) {
+                // Mostrar mensaje de éxito
+                etiquetaMensaje.setText("Usuario eliminado exitosamente");
+                
+                // Actualizar la tabla de usuarios
+                mostrarUsuarios();
+            } else {
+                // Mostrar mensaje de error
+                etiquetaMensaje.setText("Hubo un error al intentar eliminar el usuario");
+            }
+        }
+    }
+    
+    
+    }//GEN-LAST:event_botonEliminarUsuarioMouseClicked
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton botonEliminarUsuario;
     private javax.swing.JButton botonGuardar;
     private javax.swing.JButton botonNuevoUsuario;
     private javax.swing.JComboBox<String> comboRol;
     private javax.swing.JLabel etiquetaMensaje;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

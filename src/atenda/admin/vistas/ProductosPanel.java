@@ -43,9 +43,7 @@ public class ProductosPanel extends javax.swing.JPanel {
         jScrollPane1 = new javax.swing.JScrollPane();
         tablaProductosAdmin = new javax.swing.JTable();
         botonEliminarProducto = new javax.swing.JButton();
-        botonExportacion = new javax.swing.JButton();
         botonNuevoProducto = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
         mensajeProductoAdminLabel = new javax.swing.JLabel();
         botonActualizar = new javax.swing.JButton();
         mensajeProductosPanelAdmin = new javax.swing.JLabel();
@@ -105,21 +103,12 @@ public class ProductosPanel extends javax.swing.JPanel {
             }
         });
 
-        botonExportacion.setText("Exportación XML");
-        botonExportacion.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                botonExportacionActionPerformed(evt);
-            }
-        });
-
         botonNuevoProducto.setText("Novo");
         botonNuevoProducto.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 botonNuevoProductoActionPerformed(evt);
             }
         });
-
-        jButton2.setText("Importación XML");
 
         botonActualizar.setText("Gardar");
         botonActualizar.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -140,21 +129,13 @@ public class ProductosPanel extends javax.swing.JPanel {
                 .addGap(41, 41, 41)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(botonEliminarProducto)
-                                .addGap(18, 18, 18)
-                                .addComponent(botonNuevoProducto)))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(18, 18, 18)
-                                .addComponent(botonActualizar)
-                                .addGap(63, 63, 63)
-                                .addComponent(mensajeProductoAdminLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(79, 79, 79)
-                                .addComponent(botonExportacion, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addComponent(botonEliminarProducto)
+                        .addGap(18, 18, 18)
+                        .addComponent(botonNuevoProducto)
+                        .addGap(18, 18, 18)
+                        .addComponent(botonActualizar)
+                        .addGap(63, 63, 63)
+                        .addComponent(mensajeProductoAdminLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(474, 474, 474)
                         .addComponent(mensajeProductosPanelAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 367, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -190,16 +171,11 @@ public class ProductosPanel extends javax.swing.JPanel {
                         .addComponent(mensajeProductosPanelAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(mensajeProductoAdminLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(botonEliminarProducto)
-                            .addComponent(botonNuevoProducto)
-                            .addComponent(botonActualizar))
-                        .addGap(51, 51, 51)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton2)
-                            .addComponent(botonExportacion))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(botonEliminarProducto)
+                        .addComponent(botonNuevoProducto)
+                        .addComponent(botonActualizar)))
+                .addContainerGap(59, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -218,10 +194,6 @@ public class ProductosPanel extends javax.swing.JPanel {
     private void botonEliminarProductoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonEliminarProductoActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_botonEliminarProductoActionPerformed
-
-    private void botonExportacionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonExportacionActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_botonExportacionActionPerformed
 
     private void botonNuevoProductoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonNuevoProductoActionPerformed
         // TODO add your handling code here:
@@ -345,10 +317,8 @@ public class ProductosPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton botonActualizar;
     private javax.swing.JButton botonEliminarProducto;
-    private javax.swing.JButton botonExportacion;
     private javax.swing.JButton botonNuevoProducto;
     private javax.swing.JTextField buscarField;
-    private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

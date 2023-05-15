@@ -128,8 +128,7 @@ public class ProductoDAO implements Dao<Producto> {
             return false;
         }
     }
-    
-        
+
     public int getStockByProductName(String productName) throws SQLException {
         Connection connection = Conexion.getConnection();
         String query = "SELECT stock FROM produto WHERE nome = ?";
@@ -138,35 +137,93 @@ public class ProductoDAO implements Dao<Producto> {
 
         ResultSet rs = ps.executeQuery();
 
-        if(rs.next()) {
+        if (rs.next()) {
             return rs.getInt("stock");
         } else {
             throw new SQLException("No se encontró el producto con nombre " + productName);
         }
     }
-    
+
     public Producto getProductoByNombre(String nombre) throws SQLException {
-    String query = "SELECT * FROM produto WHERE nome = ?";
-    try (Connection conn = Conexion.getConnection();
-         PreparedStatement pstmt = conn.prepareStatement(query)) {
+        String query = "SELECT * FROM produto WHERE nome = ?";
+        try (Connection conn = Conexion.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query)) {
 
-        pstmt.setString(1, nombre);
+            pstmt.setString(1, nombre);
 
-        try (ResultSet rs = pstmt.executeQuery()) {
-            if (rs.next()) {
-                Producto producto = new Producto();
-                producto.setId(rs.getInt("id"));
-                producto.setNome(rs.getString("nome"));
-                producto.setCoste(rs.getDouble("coste"));
-                producto.setPrezo(rs.getDouble("prezo"));
-                producto.setDesconto(rs.getInt("desconto"));
-                producto.setIva(rs.getInt("iva"));
-                producto.setStock(rs.getInt("stock"));
-                return producto;
-            } else {
-                throw new SQLException("No se encontró el producto con nombre: " + nombre);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    Producto producto = new Producto();
+                    producto.setId(rs.getInt("id"));
+                    producto.setNome(rs.getString("nome"));
+                    producto.setCoste(rs.getDouble("coste"));
+                    producto.setPrezo(rs.getDouble("prezo"));
+                    producto.setDesconto(rs.getInt("desconto"));
+                    producto.setIva(rs.getInt("iva"));
+                    producto.setStock(rs.getInt("stock"));
+                    return producto;
+                } else {
+                    throw new SQLException("No se encontró el producto con nombre: " + nombre);
+                }
             }
         }
+    }
+
+    public int getIdProductoPorNombre(String nombre) {
+
+        int idProducto = 0;
+        String query = "SELECT id FROM produto WHERE nome = ?";
+
+        try (Connection conn = Conexion.getConnection()) {
+            PreparedStatement preparedStatement = conn.prepareStatement(query);
+            preparedStatement.setString(1, nombre);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                idProducto = resultSet.getInt("id");
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return idProducto;
+
+    }
+    
+    public int getUnidadesOriginal(int idProducto) {
+    String sql = "SELECT stock FROM produto WHERE id = ?";
+    int unidadesOriginal = 0;
+
+    try (Connection conn = Conexion.getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+        pstmt.setInt(1, idProducto);
+
+        ResultSet rs = pstmt.executeQuery();
+
+        // Extraer el resultado
+        if (rs.next()) {
+            unidadesOriginal = rs.getInt("stock");
+        }
+    } catch (SQLException e) {
+        System.out.println(e.getMessage());
+    }
+
+    return unidadesOriginal;
+}
+    
+    public void actualizarStockProducto(int idProducto, int unidadesRestar) {
+    String sql = "UPDATE produto SET stock = stock - ? WHERE id = ?";
+
+    try (Connection conn = Conexion.getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+        pstmt.setInt(1, unidadesRestar);
+        pstmt.setInt(2, idProducto);
+
+        pstmt.executeUpdate();
+    } catch (SQLException e) {
+        System.out.println(e.getMessage());
     }
 }
 

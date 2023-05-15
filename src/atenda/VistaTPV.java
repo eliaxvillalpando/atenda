@@ -5,6 +5,7 @@
  */
 package atenda;
 
+import atenda.usuarios.UsuarioDAO;
 import atenda.vistas.usuario.DevolucionPanel;
 import atenda.vistas.usuario.InicioPanel;
 import atenda.vistas.usuario.PedidoPanel;
@@ -21,10 +22,10 @@ public class VistaTPV extends javax.swing.JFrame {
 
     private final CardLayout cardLayout;
     private final JPanel cardPanel;
-    private PedidoPanel pedidosPanel = new PedidoPanel();
+    private PedidoPanel pedidosPanel = new PedidoPanel(this);
     private InicioPanel inicioPanel = new InicioPanel();
-    private DevolucionPanel devolucionPanel = new DevolucionPanel();
-    private UsuarioPanel usuarioPanel = new UsuarioPanel();
+    private DevolucionPanel devolucionPanel = new DevolucionPanel(this);
+    private UsuarioPanel usuarioPanel = new UsuarioPanel(this);
 
     /**
      * Creates new form VistaTPV
@@ -41,13 +42,13 @@ public class VistaTPV extends javax.swing.JFrame {
          * productosPanel = new ProductosPanel(); cardPanel.add(productosPanel,
          * "Productos")
          */
-        pedidosPanel = new PedidoPanel();
+        pedidosPanel = new PedidoPanel(this);
         cardPanel.add(pedidosPanel, "Pedidos");
         inicioPanel = new InicioPanel();
         cardPanel.add(inicioPanel, "Inicio");
-        devolucionPanel = new DevolucionPanel();
+        devolucionPanel = new DevolucionPanel(this);
         cardPanel.add(devolucionPanel, "Devolucion");
-        usuarioPanel = new UsuarioPanel();
+        usuarioPanel = new UsuarioPanel(this);
         cardPanel.add(usuarioPanel, "Usuario");
 
         // NoPanel es un JPanel vacío para ocultar todos los paneles
@@ -61,7 +62,10 @@ public class VistaTPV extends javax.swing.JFrame {
 
     private void mostrarPanel(String panelName) {
         cardLayout.show(cardPanel, panelName);
+        
     }
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -117,13 +121,13 @@ public class VistaTPV extends javax.swing.JFrame {
         });
         jMenuBar1.add(menuDevolucion);
 
-        menuUsuario.setText("Usuario");
         menuUsuario.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 menuUsuarioMouseClicked(evt);
             }
         });
         jMenuBar1.add(menuUsuario);
+        menuUsuario.getAccessibleContext().setAccessibleDescription("");
 
         menuSalir.setText("Salir");
         menuSalir.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -181,6 +185,17 @@ public class VistaTPV extends javax.swing.JFrame {
         VistaTPV.this.setVisible(false);    
     }//GEN-LAST:event_menuSalirMouseClicked
 
+    public void actualizarNombreUsuario(String nombreUsuario) {
+    menuUsuario.setText(nombreUsuario);
+    usuarioPanel.actualizarIdUsuarioLabel();  // Nueva línea
+    
+}
+    public String obtenerNombreUsuario() {
+    return menuUsuario.getText();
+}
+
+
+    
     /**
      * @param args the command line arguments
      */
@@ -223,6 +238,6 @@ public class VistaTPV extends javax.swing.JFrame {
     private javax.swing.JMenu menuInicio;
     private javax.swing.JMenu menuPedido;
     private javax.swing.JMenu menuSalir;
-    private javax.swing.JMenu menuUsuario;
+    public javax.swing.JMenu menuUsuario;
     // End of variables declaration//GEN-END:variables
 }

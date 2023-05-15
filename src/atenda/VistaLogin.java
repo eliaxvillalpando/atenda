@@ -117,42 +117,58 @@ public class VistaLogin extends javax.swing.JFrame {
     private void botonLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonLoginActionPerformed
         //Llamar al metodo para autenticación
 
-        UsuarioDAO dao = new UsuarioDAO();
-        String user = usuario.getText();
-        String pass = new String(contraseña.getPassword());
+         UsuarioDAO dao = new UsuarioDAO();
+    String user = usuario.getText();
+    String pass = new String(contraseña.getPassword());
 
-        if (dao.autenticar(user, pass)) {
-            // autenticación exitosa
-            System.out.println("Usuario autenticado");
+    if (dao.autenticar(user, pass)) {
+        // autenticación exitosa
+        System.out.println("Usuario autenticado");
 
-            Rol rol = dao.getRol(user);
-            if (null == rol) {
-                // rol desconocido
-                System.out.println("Rol desconocido");
-            } else {
-                switch (rol) {
-                    case ADMINISTRADOR -> {
-                        // el usuario es un administrador
-                        System.out.println("Rol: ADMINISTRATOR");
-                        VistaAdmin vistaAdmin = new VistaAdmin();
-                        vistaAdmin.setVisible(true);
-                        VistaLogin.this.setVisible(false);
-                    }
-                    case DEPENDENTE -> {
-                        // el usuario es un dependente
-                        System.out.println("Rol: DEPENDENTE");
-                        VistaTPV vistaUsuario = new VistaTPV();
-                        vistaUsuario.setVisible(true);
-                        VistaLogin.this.setVisible(false);
-                    }
-                    default -> // rol desconocido
-                        System.out.println("Rol desconocido");
-                }
-            }
+        // Obtener el ID del cliente actual
+        int idCliente = dao.obtenerIdClientePorUsuario(user); // Reemplaza esto con el código para obtener el ID del cliente
+
+        // Guardar el ID del cliente actual en PedidoDAO
+        dao.setIdClienteActual(idCliente);
+        
+         int idUsuario = dao.obtenerIdUsuario(user);
+        String nombreUsuario = String.valueOf(idUsuario);
+
+
+    // Actualizar el nombre de usuario en el menú
+        
+
+        Rol rol = dao.getRol(user);
+        if (null == rol) {
+            // rol desconocido
+            System.out.println("Rol desconocido");
         } else {
-            // autenticación fallida
-            System.out.println("Usuario o contraseña incorrectos");
+            switch (rol) {
+                case ADMINISTRADOR:
+                    // el usuario es un administrador
+                    System.out.println("Rol: ADMINISTRATOR");
+                    VistaAdmin vistaAdmin = new VistaAdmin();
+                    vistaAdmin.setVisible(true);
+                    VistaLogin.this.setVisible(false);
+                    break;
+                case DEPENDENTE:
+                    // el usuario es un dependente
+                    System.out.println("Rol: DEPENDENTE");
+                    VistaTPV vistaUsuario = new VistaTPV();
+                    vistaUsuario.setVisible(true);
+                    vistaUsuario.actualizarNombreUsuario(nombreUsuario);
+                    VistaLogin.this.setVisible(false);
+                    break;
+                default:
+                    // rol desconocido
+                    System.out.println("Rol desconocido");
+                    break;
+            }
         }
+    } else {
+        // autenticación fallida
+        System.out.println("Usuario o contraseña incorrectos");
+    }
 
     }//GEN-LAST:event_botonLoginActionPerformed
 
