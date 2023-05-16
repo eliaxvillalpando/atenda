@@ -7,7 +7,7 @@ package atenda.vista;
 
 import atenda.VistaLogin;
 import atenda.vista.ProductosPanel;
-import atenda.vista.UsuariosPanel;
+import atenda.vista.UsuariosAdminPanel;
 import atenda.vista.VentasPanel;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -23,7 +23,7 @@ public class VistaAdmin extends javax.swing.JFrame {
     private JPanel cardPanel;
     private ProductosPanel productosPanel;
 
-    private UsuariosPanel usuariosPanel;
+    private UsuariosAdminPanel usuariosPanel;
     private VentasPanel ventasPanel;
 
     /**
@@ -39,7 +39,7 @@ public class VistaAdmin extends javax.swing.JFrame {
         productosPanel = new ProductosPanel();
         cardPanel.add(productosPanel, "Productos");
 
-        usuariosPanel = new UsuariosPanel(); // Inicializar UsuariosPanel
+        usuariosPanel = new UsuariosAdminPanel(); // Inicializar UsuariosAdminPanel
         cardPanel.add(usuariosPanel, "Usuarios");
 
         ventasPanel = new VentasPanel();

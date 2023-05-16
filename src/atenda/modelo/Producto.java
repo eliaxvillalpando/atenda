@@ -1,5 +1,9 @@
 package atenda.modelo;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+
 public class Producto {
 
     private Integer id;
@@ -8,22 +12,83 @@ public class Producto {
     private Integer desconto;
     private Double coste;
     
+    @XmlTransient
     private Iva iva;
+
 
     private Integer stock;
     private boolean baixa;
-
+    
+    
+    private Iva ivaProducto;
+    private double ivaAsignado;
+    private String ivaString;
+    
+    
     public Producto() {
     }
 
-    public Producto(String nome, Double prezo, Integer desconto, Double coste, Iva iva, Integer stock) {
+    public Producto(String nome, Double prezo, Integer desconto, Double coste, String iva, Integer stock) {
         this.nome = nome;
         this.prezo = prezo;
         this.desconto = desconto;
         this.coste = coste;
-        this.iva = iva;
+        
         this.stock = stock;
+        
+        
+        this.ivaProducto = Iva.fromString(iva);
+
+        if (ivaProducto == Iva.TIPO_REDUCIDO) {
+            ivaAsignado = 10.0 / 100.0;
+        } else if (ivaProducto == Iva.TIPO_XERAL) {
+            ivaAsignado = 21.0 / 100.0;
+        } else if (ivaProducto == Iva.TIPO_SUPERREDUCIDO) {
+            ivaAsignado = 4.0 / 100.0;
+        }
+        
+        
     }
+    
+    public String getIvaString() {
+        if (iva != null) {
+            return iva.toString();
+        } else {
+            return null;
+        }
+    }
+    
+    public void setIvaAsignado(double ivaAsignado) {
+        this.ivaAsignado = ivaAsignado;
+    }
+    
+    @XmlElement
+    public double getIvaAsignado() {
+        return ivaAsignado;
+    }
+
+    @XmlElement
+public void setIvaString(String ivaString) {
+    this.ivaString = ivaString;
+    if (ivaString != null) {
+        switch (ivaString) {
+            case "TIPO_REDUCIDO":
+                this.ivaAsignado = 10.0 / 100.0;
+                break;
+            case "TIPO_XERAL":
+                this.ivaAsignado = 21.0 / 100.0;
+                break;
+            case "TIPO_SUPERREDUCIDO":
+                this.ivaAsignado = 4.0 / 100.0;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+
+    
 
     public Integer getDesconto() {
         return desconto;

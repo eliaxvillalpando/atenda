@@ -7,9 +7,17 @@ import atenda.modelo.Pedido;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import static java.awt.print.Printable.PAGE_EXISTS;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.io.File;
 import java.util.List;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -17,6 +25,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -24,6 +34,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
+import javax.xml.bind.PropertyException;
 
 /**
  *
@@ -194,12 +205,11 @@ public class PedidoPanel extends javax.swing.JPanel {
                                         .addComponent(cantidadDescuento, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE))
                                     .addComponent(jLabel3))
                                 .addGap(18, 18, 18)))
-                        .addGap(0, 151, Short.MAX_VALUE))
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(14, 14, 14)
+                        .addGap(38, 38, 38)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(24, 24, 24)
                                 .addComponent(botonHacerPedido, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(159, 159, 159)
                                 .addComponent(botonCancelarPedido, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -207,7 +217,7 @@ public class PedidoPanel extends javax.swing.JPanel {
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 461, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGroup(layout.createSequentialGroup()
-                                        .addGap(93, 93, 93)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 134, Short.MAX_VALUE)
                                         .addComponent(mensajeStock, javax.swing.GroupLayout.PREFERRED_SIZE, 348, javax.swing.GroupLayout.PREFERRED_SIZE)))
                                 .addGap(18, 18, 18)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -219,7 +229,7 @@ public class PedidoPanel extends javax.swing.JPanel {
                                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                                         .addComponent(subTotalEtiqueta, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
                                         .addComponent(totalPedidoLabel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -345,8 +355,8 @@ public class PedidoPanel extends javax.swing.JPanel {
 
             if (pedidoGuardado) {
                 ModeloDAO productoDAO = new ModeloDAO();
-            int idProducto = productoDAO.getIdProductoPorNombre(nombreProducto);
-            productoDAO.actualizarStockProducto(idProducto, unidades);
+                int idProducto = productoDAO.getIdProductoPorNombre(nombreProducto);
+                productoDAO.actualizarStockProducto(idProducto, unidades);
                 mensajeStock.setForeground(Color.GREEN);
 
                 mensajeStock.setText("Pedido realizado exitosamente");
@@ -375,7 +385,7 @@ public class PedidoPanel extends javax.swing.JPanel {
                 model.getValueAt(i, 2),
                 model.getValueAt(i, 3),
                 // Aquí asumimos que la columna IVA es la columna 4 en tu tabla original
-                
+
                 model.getValueAt(i, 4)
             });
         }
@@ -402,10 +412,57 @@ public class PedidoPanel extends javax.swing.JPanel {
         // Crear nuevos JLabels y establecer su texto para ser igual al total e IVA copiados
         JLabel totalPedidoLabelInfo = new JLabel("Total: " + total);
 
+        JButton botonImprimir = new JButton("Imprimir");
+
+        botonImprimir.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                PrinterJob job = PrinterJob.getPrinterJob();
+                job.setPrintable(new Printable() {
+                    @Override
+                    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+                        if (pageIndex > 0) {
+                            return NO_SUCH_PAGE;
+                        }
+
+                        Graphics2D g2d = (Graphics2D) graphics;
+                        g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+
+                        // Escalar el contenido del JFrame para que quepa en una sola página
+                        double pageWidth = pageFormat.getImageableWidth();
+                        double pageHeight = pageFormat.getImageableHeight();
+                        double frameWidth = pedidoCreadoInfo.getWidth();
+                        double frameHeight = pedidoCreadoInfo.getHeight();
+
+                        double scaleX = pageWidth / frameWidth;
+                        double scaleY = pageHeight / frameHeight;
+                        double scale = Math.min(scaleX, scaleY);
+
+                        g2d.scale(scale, scale);
+
+                        // Dibujar el contenido del JFrame en el objeto Graphics2D
+                        pedidoCreadoInfo.paint(g2d);
+
+                        return PAGE_EXISTS;
+                    }
+                });
+
+                boolean doPrint = job.printDialog();
+                if (doPrint) {
+                    try {
+                        job.print();
+                    } catch (PrinterException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+
         // Crear un panel para contener la tabla y los JLabels
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JScrollPane(tablaPedidoInfo), BorderLayout.CENTER);
         panel.add(totalPedidoLabelInfo, BorderLayout.SOUTH);
+        panel.add(botonImprimir, BorderLayout.SOUTH);
 
         // Ajustar el tamaño del panel para que sea más pequeño que el JFrame
         panel.setPreferredSize(new Dimension(500, 300));
@@ -589,60 +646,59 @@ public class PedidoPanel extends javax.swing.JPanel {
     }
 
     private void calcularTotalPedido() {
-    DefaultTableModel model = (DefaultTableModel) tablaContenidoPedido.getModel();
-    double subtotal = 0.0;
-    double ivaTotal = 0.0;
-
-    for (int i = 0; i < model.getRowCount(); i++) {
-        int cantidad = (int) model.getValueAt(i, 1);
-        double precio = (double) model.getValueAt(i, 2);
-        int descuento = (int) model.getValueAt(i, 3);
-        double ivaProducto = (double) model.getValueAt(i, 4);
-        double precioConDescuento = calcularPrecioConDescuento(precio, descuento);
-        subtotal += cantidad * precioConDescuento;
-        ivaTotal += (cantidad * precioConDescuento) * (ivaProducto / 100.0);
-    }
-
-    double total = subtotal + ivaTotal;
-
-    subTotalEtiqueta.setText(String.valueOf(subtotal));
-    etiquetaIvaTotal.setText(String.valueOf(ivaTotal));
-    totalPedidoLabel.setText(String.valueOf(total));
-}
-
-private void agregarProducto(String nombreProducto, int cantidad, int descuento) {
-    ModeloDAO productoDAO = new ModeloDAO();
-    try {
-        Producto producto = productoDAO.getProductoByNombre(nombreProducto);
-        double precioConDescuento = calcularPrecioConDescuento(producto.getPrezo(), descuento);
-        Iva ivaProducto = producto.getIva();
-        double ivaAsignado = 0.0;
-
-        if (ivaProducto == Iva.TIPO_REDUCIDO) {
-            ivaAsignado = 10.0 / 100.0;
-        } else if (ivaProducto == Iva.TIPO_XERAL) {
-            ivaAsignado = 21.0 / 100.0;
-        } else if (ivaProducto == Iva.TIPO_SUPERREDUCIDO) {
-            ivaAsignado = 4.0 / 100.0;
-        }
         DefaultTableModel model = (DefaultTableModel) tablaContenidoPedido.getModel();
-        model.addRow(new Object[]{nombreProducto, cantidad, producto.getPrezo(), descuento, ivaAsignado, precioConDescuento});
+        double subtotal = 0.0;
+        double ivaTotal = 0.0;
 
-        // Actualizar el stock en la lista de productos agregados
-        producto.setStock(producto.getStock() - cantidad);
-        productosAgregados.add(producto);
+        for (int i = 0; i < model.getRowCount(); i++) {
+            int cantidad = (int) model.getValueAt(i, 1);
+            double precio = (double) model.getValueAt(i, 2);
+            int descuento = (int) model.getValueAt(i, 3);
+            double ivaProducto = (double) model.getValueAt(i, 4);
+            double precioConDescuento = calcularPrecioConDescuento(precio, descuento);
+            subtotal += cantidad * precioConDescuento;
+            ivaTotal += (cantidad * precioConDescuento) * (ivaProducto / 100.0);
+        }
 
-        calcularTotalPedido(); // Recalcular el total
-    } catch (SQLException ex) {
-        Logger.getLogger(PedidoPanel.class.getName()).log(Level.SEVERE, null, ex);
+        double total = subtotal + ivaTotal;
+
+        subTotalEtiqueta.setText(String.valueOf(subtotal));
+        etiquetaIvaTotal.setText(String.valueOf(ivaTotal));
+        totalPedidoLabel.setText(String.valueOf(total));
     }
-}
 
-private double calcularPrecioConDescuento(double precio, int descuento) {
-    double descuentoPorcentaje = descuento / 100.0;
-    return precio - (precio * descuentoPorcentaje);
-}
+    private void agregarProducto(String nombreProducto, int cantidad, int descuento) {
+        ModeloDAO productoDAO = new ModeloDAO();
+        try {
+            Producto producto = productoDAO.getProductoByNombre(nombreProducto);
+            double precioConDescuento = calcularPrecioConDescuento(producto.getPrezo(), descuento);
+            Iva ivaProducto = producto.getIva();
+            double ivaAsignado = 0.0;
 
+            if (ivaProducto == Iva.TIPO_REDUCIDO) {
+                ivaAsignado = 10.0 / 100.0;
+            } else if (ivaProducto == Iva.TIPO_XERAL) {
+                ivaAsignado = 21.0 / 100.0;
+            } else if (ivaProducto == Iva.TIPO_SUPERREDUCIDO) {
+                ivaAsignado = 4.0 / 100.0;
+            }
+            DefaultTableModel model = (DefaultTableModel) tablaContenidoPedido.getModel();
+            model.addRow(new Object[]{nombreProducto, cantidad, producto.getPrezo(), descuento, ivaAsignado, precioConDescuento});
+
+            // Actualizar el stock en la lista de productos agregados
+            producto.setStock(producto.getStock() - cantidad);
+            productosAgregados.add(producto);
+
+            calcularTotalPedido(); // Recalcular el total
+        } catch (SQLException ex) {
+            Logger.getLogger(PedidoPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private double calcularPrecioConDescuento(double precio, int descuento) {
+        double descuentoPorcentaje = descuento / 100.0;
+        return precio - (precio * descuentoPorcentaje);
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

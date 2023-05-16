@@ -4,13 +4,19 @@ import atenda.modelo.Iva;
 import atenda.controlador.ModeloDAO;
 import atenda.modelo.Producto;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.RowFilter;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import javax.swing.Timer;
+import javax.xml.bind.PropertyException;
 
 public class ProductosPanel extends javax.swing.JPanel {
 
@@ -50,6 +56,8 @@ public class ProductosPanel extends javax.swing.JPanel {
         mensajeProductosPanelAdmin = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
+        botonExportarXML = new javax.swing.JButton();
+        botonImportarXML = new javax.swing.JButton();
 
         jLabel1.setText("Buscar");
 
@@ -122,6 +130,20 @@ public class ProductosPanel extends javax.swing.JPanel {
 
         jLabel3.setText("%");
 
+        botonExportarXML.setText("Exportar XML");
+        botonExportarXML.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonExportarXMLMouseClicked(evt);
+            }
+        });
+
+        botonImportarXML.setText("Importar XML");
+        botonImportarXML.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonImportarXMLMouseClicked(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -130,11 +152,14 @@ public class ProductosPanel extends javax.swing.JPanel {
                 .addGap(41, 41, 41)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(botonEliminarProducto)
-                        .addGap(18, 18, 18)
-                        .addComponent(botonNuevoProducto)
-                        .addGap(18, 18, 18)
-                        .addComponent(botonActualizar)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(botonEliminarProducto)
+                                .addGap(18, 18, 18)
+                                .addComponent(botonNuevoProducto)
+                                .addGap(18, 18, 18)
+                                .addComponent(botonActualizar))
+                            .addComponent(botonExportarXML))
                         .addGap(63, 63, 63)
                         .addComponent(mensajeProductoAdminLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
@@ -150,8 +175,11 @@ public class ProductosPanel extends javax.swing.JPanel {
                             .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING))
                         .addGap(36, 36, 36)
                         .addComponent(jLabel2))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 468, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 468, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(34, 34, 34)
+                        .addComponent(botonImportarXML, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(26, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -164,19 +192,27 @@ public class ProductosPanel extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 253, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(mensajeProductosPanelAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(mensajeProductoAdminLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(botonEliminarProducto)
-                        .addComponent(botonNuevoProducto)
-                        .addComponent(botonActualizar)))
-                .addContainerGap(59, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 253, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(mensajeProductosPanelAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(mensajeProductoAdminLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(botonEliminarProducto)
+                                    .addComponent(botonNuevoProducto)
+                                    .addComponent(botonActualizar))
+                                .addGap(18, 18, 18)
+                                .addComponent(botonExportarXML))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(49, 49, 49)
+                        .addComponent(botonImportarXML)))
+                .addContainerGap(181, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -271,6 +307,46 @@ public class ProductosPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_botonEliminarProductoMouseClicked
 
+    private void botonExportarXMLMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonExportarXMLMouseClicked
+        // TODO add your handling code here:
+          JFileChooser chooser = new JFileChooser();
+    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+    int option = chooser.showSaveDialog(null);
+    if (option == JFileChooser.APPROVE_OPTION) {
+            try {
+                File file = chooser.getSelectedFile();
+                new ModeloDAO().importarProductos(file.getAbsolutePath() + "/produto.xml");
+            } catch (PropertyException ex) {
+                Logger.getLogger(PedidoPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+    }
+        
+    }//GEN-LAST:event_botonExportarXMLMouseClicked
+
+    private void botonImportarXMLMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonImportarXMLMouseClicked
+        // Create a file chooser
+    final JFileChooser fc = new JFileChooser();
+
+    // In response to a button click:
+    int returnVal = fc.showOpenDialog(this);
+
+    if (returnVal == JFileChooser.APPROVE_OPTION) {
+        File file = fc.getSelectedFile();
+        // Call the import method with the selected file path
+        ModeloDAO modeloDAO = new ModeloDAO();
+        try {
+            modeloDAO.importarProductosFromXML(file.getAbsolutePath());
+            JOptionPane.showMessageDialog(this, "Importado con exito", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            actualizarTabla();
+        } catch (RuntimeException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    } else {
+        System.out.println("Cancelado por usuario");
+    }
+        
+    }//GEN-LAST:event_botonImportarXMLMouseClicked
+
     private void actualizarTabla() {
         ModeloDAO productoDAO = new ModeloDAO();
 
@@ -327,6 +403,8 @@ public class ProductosPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton botonActualizar;
     private javax.swing.JButton botonEliminarProducto;
+    private javax.swing.JButton botonExportarXML;
+    private javax.swing.JButton botonImportarXML;
     private javax.swing.JButton botonNuevoProducto;
     private javax.swing.JTextField buscarField;
     private javax.swing.JLabel jLabel1;

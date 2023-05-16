@@ -1,4 +1,3 @@
-
 package atenda.controlador;
 
 import atenda.controlador.Conexion;
@@ -6,8 +5,12 @@ import atenda.modelo.Devolucion;
 import atenda.modelo.Iva;
 import atenda.modelo.LineaPedido;
 import atenda.modelo.Producto;
+import atenda.modelo.ProductosWraper;
 import atenda.modelo.Rol;
 import atenda.modelo.Usuario;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -19,12 +22,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.PropertyException;
+import javax.xml.bind.Unmarshaller;
 
 public class ModeloDAO {
-    
-    
-    
+
     //METODOS DEVOLUCIONES 
     public void guardarDevolucion(int id_pedido, String dependente, int uds, int id_producto, String fecha) {
         String sql = "INSERT INTO devolucion(id_pedido, dependente, unidades, id_producto, data_time) VALUES (?, ?, ?, ?, ?)";
@@ -47,35 +52,33 @@ public class ModeloDAO {
             System.out.println(e.getMessage());
         }
     }
-    
-    
-     public List<Devolucion> getDevoluciones() {
-    List<Devolucion> devoluciones = new ArrayList<>();
-    String sql = "SELECT * FROM devolucion";
 
-    try (Connection conn = Conexion.getConnection();
+    public List<Devolucion> getDevoluciones() {
+        List<Devolucion> devoluciones = new ArrayList<>();
+        String sql = "SELECT * FROM devolucion";
+
+        try (Connection conn = Conexion.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-        ResultSet rs = pstmt.executeQuery();
-        while (rs.next()) {
-            Devolucion devolucion = new Devolucion();
-            devolucion.setId_pedido(rs.getInt("id_pedido"));
-            
-            String dataTimeString = rs.getString("data_time");
-            devolucion.setFecha(dataTimeString);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Devolucion devolucion = new Devolucion();
+                devolucion.setId_pedido(rs.getInt("id_pedido"));
 
-            devolucion.setDependente(rs.getString("dependente"));
-            devolucion.setUnidades(rs.getInt("unidades"));
-            devoluciones.add(devolucion);
+                String dataTimeString = rs.getString("data_time");
+                devolucion.setFecha(dataTimeString);
+
+                devolucion.setDependente(rs.getString("dependente"));
+                devolucion.setUnidades(rs.getInt("unidades"));
+                devoluciones.add(devolucion);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
+        return devoluciones;
     }
-    return devoluciones;
-}
-     
-     
-     //METODOS PEDIDODAO
-     public boolean savePedidoProducto(int idPedido, String nombreProducto, int descuento, int unidades, double prezo, double coste) {
+
+    //METODOS PEDIDODAO
+    public boolean savePedidoProducto(int idPedido, String nombreProducto, int descuento, int unidades, double prezo, double coste) {
         try (Connection conn = Conexion.getConnection()) {
             String query = "INSERT INTO linea_pedido (id_pedido, id_produto, desconto, unidades, prezo, coste) VALUES (?, ?, ?, ?, ?, ?)";
             try (PreparedStatement statement = conn.prepareStatement(query)) {
@@ -236,188 +239,184 @@ public class ModeloDAO {
         }
         return nombreProducto;
     }
-    
+
     public boolean updateLineaPedidoForDevolucion(int idPedido, int id_produto, int unidades, double coste) {
-    boolean isUpdated = false;
-    String sql = "UPDATE linea_pedido SET unidades = ?, coste = ? WHERE id_pedido = ? AND id_produto = ?";
+        boolean isUpdated = false;
+        String sql = "UPDATE linea_pedido SET unidades = ?, coste = ? WHERE id_pedido = ? AND id_produto = ?";
 
-    try (Connection conn = Conexion.getConnection();
-         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = Conexion.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        // Establecer los parámetros
-        pstmt.setInt(1, unidades);
-        pstmt.setDouble(2, coste);
-        pstmt.setInt(3, idPedido);
-        pstmt.setInt(4, id_produto);
+            // Establecer los parámetros
+            pstmt.setInt(1, unidades);
+            pstmt.setDouble(2, coste);
+            pstmt.setInt(3, idPedido);
+            pstmt.setInt(4, id_produto);
 
-        // Actualizar y comprobar si se actualizó alguna fila
-        int rowAffected = pstmt.executeUpdate();
-        if(rowAffected > 0) {
-            isUpdated = true;
+            // Actualizar y comprobar si se actualizó alguna fila
+            int rowAffected = pstmt.executeUpdate();
+            if (rowAffected > 0) {
+                isUpdated = true;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
-    } catch (SQLException e) {
-        System.out.println(e.getMessage());
+        return isUpdated;
     }
-    return isUpdated;
-}
 
     public List<String> getPedidoRecordsPorFecha(Date fechaDesde, Date fechaHasta) {
-    List<String> pedidoRecords = new ArrayList<>();
-    try (Connection conn = Conexion.getConnection()) {
-        String query = "SELECT id_pedido_devol, data_hora, id_cliente FROM pedido WHERE data_hora BETWEEN ? AND ?";
-        try (PreparedStatement statement = conn.prepareStatement(query)) {
-            // Convertir las fechas a objetos java.sql.Timestamp
-            Timestamp fechaDesdeSQL = new Timestamp(fechaDesde.getTime());
-            Timestamp fechaHastaSQL = new Timestamp(fechaHasta.getTime());
-            
-            // Establecer los parámetros de las fechas
-            statement.setTimestamp(1, fechaDesdeSQL);
-            statement.setTimestamp(2, fechaHastaSQL);
-            
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    int idPedido = resultSet.getInt("id_pedido_devol");
-                    String dataHora = resultSet.getString("data_hora");
-                    int idCliente = resultSet.getInt("id_cliente");
-                    String record = idPedido + " " + dataHora + " " + idCliente;
-                    pedidoRecords.add(record);
+        List<String> pedidoRecords = new ArrayList<>();
+        try (Connection conn = Conexion.getConnection()) {
+            String query = "SELECT id_pedido_devol, data_hora, id_cliente FROM pedido WHERE data_hora BETWEEN ? AND ?";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                // Convertir las fechas a objetos java.sql.Timestamp
+                Timestamp fechaDesdeSQL = new Timestamp(fechaDesde.getTime());
+                Timestamp fechaHastaSQL = new Timestamp(fechaHasta.getTime());
+
+                // Establecer los parámetros de las fechas
+                statement.setTimestamp(1, fechaDesdeSQL);
+                statement.setTimestamp(2, fechaHastaSQL);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        int idPedido = resultSet.getInt("id_pedido_devol");
+                        String dataHora = resultSet.getString("data_hora");
+                        int idCliente = resultSet.getInt("id_cliente");
+                        String record = idPedido + " " + dataHora + " " + idCliente;
+                        pedidoRecords.add(record);
+                    }
                 }
             }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener los registros de pedido por fecha: " + e.getMessage());
         }
-    } catch (SQLException e) {
-        System.out.println("Error al obtener los registros de pedido por fecha: " + e.getMessage());
+        return pedidoRecords;
     }
-    return pedidoRecords;
-}
 
-    
     public double sumarCosteLineaPedidoPorFecha(Date fechaDesde, Date fechaHasta) {
-    double sumaCoste = 0.0;
-    try (Connection conn = Conexion.getConnection()) {
-        String query = "SELECT lp.id_pedido, SUM(lp.coste) AS total_coste "
-                     + "FROM pedido p "
-                     + "INNER JOIN linea_pedido lp ON p.id_pedido_devol = lp.id_pedido "
-                     + "WHERE p.data_hora BETWEEN ? AND ? "
-                     + "GROUP BY lp.id_pedido";
-        try (PreparedStatement statement = conn.prepareStatement(query)) {
-            // Convertir las fechas a objetos java.sql.Timestamp
-            Timestamp fechaDesdeSQL = new Timestamp(fechaDesde.getTime());
-            Timestamp fechaHastaSQL = new Timestamp(fechaHasta.getTime());
-            
-            // Establecer los parámetros de las fechas
-            statement.setTimestamp(1, fechaDesdeSQL);
-            statement.setTimestamp(2, fechaHastaSQL);
-            
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    double coste = resultSet.getDouble("total_coste");
-                    sumaCoste += coste;
+        double sumaCoste = 0.0;
+        try (Connection conn = Conexion.getConnection()) {
+            String query = "SELECT lp.id_pedido, SUM(lp.coste) AS total_coste "
+                    + "FROM pedido p "
+                    + "INNER JOIN linea_pedido lp ON p.id_pedido_devol = lp.id_pedido "
+                    + "WHERE p.data_hora BETWEEN ? AND ? "
+                    + "GROUP BY lp.id_pedido";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                // Convertir las fechas a objetos java.sql.Timestamp
+                Timestamp fechaDesdeSQL = new Timestamp(fechaDesde.getTime());
+                Timestamp fechaHastaSQL = new Timestamp(fechaHasta.getTime());
+
+                // Establecer los parámetros de las fechas
+                statement.setTimestamp(1, fechaDesdeSQL);
+                statement.setTimestamp(2, fechaHastaSQL);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        double coste = resultSet.getDouble("total_coste");
+                        sumaCoste += coste;
+                    }
                 }
             }
+        } catch (SQLException e) {
+            System.out.println("Error al calcular la suma de coste en la tabla linea_pedido por fecha: " + e.getMessage());
         }
-    } catch (SQLException e) {
-        System.out.println("Error al calcular la suma de coste en la tabla linea_pedido por fecha: " + e.getMessage());
+        return sumaCoste;
     }
-    return sumaCoste;
-}
-    
+
     public int sumarDescontoLineaPedidoPorFecha(Date fechaDesde, Date fechaHasta) {
-    int sumaDesconto = 0;
-    try (Connection conn = Conexion.getConnection()) {
-        String query = "SELECT lp.id_pedido, SUM(lp.desconto) AS total_desconto "
-                     + "FROM pedido p "
-                     + "INNER JOIN linea_pedido lp ON p.id_pedido_devol = lp.id_pedido "
-                     + "WHERE p.data_hora BETWEEN ? AND ? "
-                     + "GROUP BY lp.id_pedido";
-        try (PreparedStatement statement = conn.prepareStatement(query)) {
-            // Convertir las fechas a objetos java.sql.Timestamp
-            Timestamp fechaDesdeSQL = new Timestamp(fechaDesde.getTime());
-            Timestamp fechaHastaSQL = new Timestamp(fechaHasta.getTime());
-            
-            // Establecer los parámetros de las fechas
-            statement.setTimestamp(1, fechaDesdeSQL);
-            statement.setTimestamp(2, fechaHastaSQL);
-            
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    int desconto = resultSet.getInt("total_desconto");
-                    sumaDesconto += desconto;
+        int sumaDesconto = 0;
+        try (Connection conn = Conexion.getConnection()) {
+            String query = "SELECT lp.id_pedido, SUM(lp.desconto) AS total_desconto "
+                    + "FROM pedido p "
+                    + "INNER JOIN linea_pedido lp ON p.id_pedido_devol = lp.id_pedido "
+                    + "WHERE p.data_hora BETWEEN ? AND ? "
+                    + "GROUP BY lp.id_pedido";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                // Convertir las fechas a objetos java.sql.Timestamp
+                Timestamp fechaDesdeSQL = new Timestamp(fechaDesde.getTime());
+                Timestamp fechaHastaSQL = new Timestamp(fechaHasta.getTime());
+
+                // Establecer los parámetros de las fechas
+                statement.setTimestamp(1, fechaDesdeSQL);
+                statement.setTimestamp(2, fechaHastaSQL);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        int desconto = resultSet.getInt("total_desconto");
+                        sumaDesconto += desconto;
+                    }
                 }
             }
+        } catch (SQLException e) {
+            System.out.println("Error al calcular la suma de desconto en la tabla linea_pedido por fecha: " + e.getMessage());
         }
-    } catch (SQLException e) {
-        System.out.println("Error al calcular la suma de desconto en la tabla linea_pedido por fecha: " + e.getMessage());
+        return sumaDesconto;
     }
-    return sumaDesconto;
-}
 
+    public double multiplicarUnidadesCosteLineaPedidoPorFecha(Date fechaDesde, Date fechaHasta) {
+        double totalMultiplicacion = 0.0;
+        try (Connection conn = Conexion.getConnection()) {
+            String query = "SELECT lp.id_pedido, SUM(lp.unidades * pr.coste) AS total_multiplicacion "
+                    + "FROM pedido p "
+                    + "INNER JOIN linea_pedido lp ON p.id_pedido_devol = lp.id_pedido "
+                    + "INNER JOIN produto pr ON lp.id_produto = pr.id "
+                    + "WHERE p.data_hora BETWEEN ? AND ? "
+                    + "GROUP BY lp.id_pedido";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                // Convertir las fechas a objetos java.sql.Timestamp
+                Timestamp fechaDesdeSQL = new Timestamp(fechaDesde.getTime());
+                Timestamp fechaHastaSQL = new Timestamp(fechaHasta.getTime());
 
-public double multiplicarUnidadesCosteLineaPedidoPorFecha(Date fechaDesde, Date fechaHasta) {
-    double totalMultiplicacion = 0.0;
-    try (Connection conn = Conexion.getConnection()) {
-        String query = "SELECT lp.id_pedido, SUM(lp.unidades * pr.coste) AS total_multiplicacion "
-                     + "FROM pedido p "
-                     + "INNER JOIN linea_pedido lp ON p.id_pedido_devol = lp.id_pedido "
-                     + "INNER JOIN produto pr ON lp.id_produto = pr.id "
-                     + "WHERE p.data_hora BETWEEN ? AND ? "
-                     + "GROUP BY lp.id_pedido";
-        try (PreparedStatement statement = conn.prepareStatement(query)) {
-            // Convertir las fechas a objetos java.sql.Timestamp
-            Timestamp fechaDesdeSQL = new Timestamp(fechaDesde.getTime());
-            Timestamp fechaHastaSQL = new Timestamp(fechaHasta.getTime());
-            
-            // Establecer los parámetros de las fechas
-            statement.setTimestamp(1, fechaDesdeSQL);
-            statement.setTimestamp(2, fechaHastaSQL);
-            
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    double multiplicacion = resultSet.getDouble("total_multiplicacion");
-                    totalMultiplicacion += multiplicacion;
+                // Establecer los parámetros de las fechas
+                statement.setTimestamp(1, fechaDesdeSQL);
+                statement.setTimestamp(2, fechaHastaSQL);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        double multiplicacion = resultSet.getDouble("total_multiplicacion");
+                        totalMultiplicacion += multiplicacion;
+                    }
                 }
             }
+        } catch (SQLException e) {
+            System.out.println("Error al calcular la multiplicación de unidades y coste en la tabla linea_pedido por fecha: " + e.getMessage());
         }
-    } catch (SQLException e) {
-        System.out.println("Error al calcular la multiplicación de unidades y coste en la tabla linea_pedido por fecha: " + e.getMessage());
+        return totalMultiplicacion;
     }
-    return totalMultiplicacion;
-}
 
-   public double sumarIvaLineaPedidoPorFecha(Date fechaDesde, Date fechaHasta) {
-    double sumaIva = 0.0;
-    try (Connection conn = Conexion.getConnection()) {
-        String query = "SELECT lp.id_pedido, SUM(lp.prezo * CASE pr.iva WHEN 'TIPO_REDUCIDO' THEN 10.0 / 100.0 WHEN 'TIPO_XERAL' THEN 21.0 / 100.0 WHEN 'TIPO_SUPERREDUCIDO' THEN 4.0 / 100.0 ELSE 0.0 END) AS total_iva "
-                     + "FROM pedido p "
-                     + "INNER JOIN linea_pedido lp ON p.id_pedido_devol = lp.id_pedido "
-                     + "INNER JOIN produto pr ON lp.id_produto = pr.id "
-                     + "WHERE p.data_hora BETWEEN ? AND ? "
-                     + "GROUP BY lp.id_pedido";
-        try (PreparedStatement statement = conn.prepareStatement(query)) {
-            // Convertir las fechas a objetos java.sql.Timestamp
-            Timestamp fechaDesdeSQL = new Timestamp(fechaDesde.getTime());
-            Timestamp fechaHastaSQL = new Timestamp(fechaHasta.getTime());
+    public double sumarIvaLineaPedidoPorFecha(Date fechaDesde, Date fechaHasta) {
+        double sumaIva = 0.0;
+        try (Connection conn = Conexion.getConnection()) {
+            String query = "SELECT lp.id_pedido, SUM(lp.prezo * CASE pr.iva WHEN 'TIPO_REDUCIDO' THEN 10.0 / 100.0 WHEN 'TIPO_XERAL' THEN 21.0 / 100.0 WHEN 'TIPO_SUPERREDUCIDO' THEN 4.0 / 100.0 ELSE 0.0 END) AS total_iva "
+                    + "FROM pedido p "
+                    + "INNER JOIN linea_pedido lp ON p.id_pedido_devol = lp.id_pedido "
+                    + "INNER JOIN produto pr ON lp.id_produto = pr.id "
+                    + "WHERE p.data_hora BETWEEN ? AND ? "
+                    + "GROUP BY lp.id_pedido";
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                // Convertir las fechas a objetos java.sql.Timestamp
+                Timestamp fechaDesdeSQL = new Timestamp(fechaDesde.getTime());
+                Timestamp fechaHastaSQL = new Timestamp(fechaHasta.getTime());
 
-            // Establecer los parámetros de las fechas
-            statement.setTimestamp(1, fechaDesdeSQL);
-            statement.setTimestamp(2, fechaHastaSQL);
+                // Establecer los parámetros de las fechas
+                statement.setTimestamp(1, fechaDesdeSQL);
+                statement.setTimestamp(2, fechaHastaSQL);
 
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    double iva = resultSet.getDouble("total_iva");
-                    sumaIva += iva;
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        double iva = resultSet.getDouble("total_iva");
+                        sumaIva += iva;
+                    }
                 }
             }
+        } catch (SQLException e) {
+            System.out.println("Error al calcular la suma de IVA en la tabla linea_pedido y produto por fecha: " + e.getMessage());
         }
-    } catch (SQLException e) {
-        System.out.println("Error al calcular la suma de IVA en la tabla linea_pedido y produto por fecha: " + e.getMessage());
+        return sumaIva;
     }
-    return sumaIva;
-}
-   
-   
-   //METODOS PRODUCTO 
-   
-   private static int idClienteActual; // Variable estática para almacenar el ID del cliente actual
+
+    //METODOS PRODUCTO 
+    private static int idClienteActual; // Variable estática para almacenar el ID del cliente actual
 
     public static int getIdClienteActual() {
         return idClienteActual;
@@ -490,8 +489,6 @@ public double multiplicarUnidadesCosteLineaPedidoPorFecha(Date fechaDesde, Date 
         return idUsuario;
     }
 
-
-    
     public void saveUsuario(Usuario usuario) {
         // Implementar la lógica para guardar un usuario
         String sql = "INSERT INTO usuario(username, password, nome, rol, avatar) VALUES(?, ?, ?, ?, ?)";
@@ -513,7 +510,6 @@ public double multiplicarUnidadesCosteLineaPedidoPorFecha(Date fechaDesde, Date 
 
     }
 
-    
     public void update(Usuario usuario) {
         // Implementar la lógica para actualizar un usuario
         String sql = "UPDATE usuario SET username = ?, password = ?, nome = ?, rol = ? WHERE nome = ?";
@@ -533,7 +529,6 @@ public double multiplicarUnidadesCosteLineaPedidoPorFecha(Date fechaDesde, Date 
             System.out.println(ex.getMessage());
         }
     }
-
 
     public boolean autenticar(String usuario, String contraseña) {
         String sql = "SELECT * FROM usuario WHERE username = ? AND password = ?";
@@ -700,13 +695,12 @@ public double multiplicarUnidadesCosteLineaPedidoPorFecha(Date fechaDesde, Date 
             System.out.println(ex.getMessage());
         }
     }
-    
-    
+
     public boolean eliminarPorId(int id) {
         String sql = "DELETE FROM usuario WHERE id = ?";
 
         try (Connection conn = Conexion.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
             int rowsAffected = pstmt.executeUpdate();
@@ -718,7 +712,7 @@ public double multiplicarUnidadesCosteLineaPedidoPorFecha(Date fechaDesde, Date 
             return false;  // Devuelve false si hubo algún error
         }
     }
-    
+
     public void save(Producto t) {
 
         String sql = "INSERT INTO produto (nome, prezo, desconto, coste, iva, stock, baixa) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -741,7 +735,7 @@ public double multiplicarUnidadesCosteLineaPedidoPorFecha(Date fechaDesde, Date 
         }
 
     }
-    
+
     public void delete(Producto t) {
 
         String sql = "DELETE FROM produto WHERE id = ?";
@@ -881,48 +875,103 @@ public double multiplicarUnidadesCosteLineaPedidoPorFecha(Date fechaDesde, Date 
         return idProducto;
 
     }
-    
+
     public int getUnidadesOriginal(int idProducto) {
-    String sql = "SELECT stock FROM produto WHERE id = ?";
-    int unidadesOriginal = 0;
+        String sql = "SELECT stock FROM produto WHERE id = ?";
+        int unidadesOriginal = 0;
 
-    try (Connection conn = Conexion.getConnection();
-         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = Conexion.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        pstmt.setInt(1, idProducto);
+            pstmt.setInt(1, idProducto);
 
-        ResultSet rs = pstmt.executeQuery();
+            ResultSet rs = pstmt.executeQuery();
 
-        // Extraer el resultado
-        if (rs.next()) {
-            unidadesOriginal = rs.getInt("stock");
+            // Extraer el resultado
+            if (rs.next()) {
+                unidadesOriginal = rs.getInt("stock");
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
-    } catch (SQLException e) {
-        System.out.println(e.getMessage());
+
+        return unidadesOriginal;
     }
 
-    return unidadesOriginal;
-}
-    
     public void actualizarStockProducto(int idProducto, int unidadesRestar) {
-    String sql = "UPDATE produto SET stock = stock - ? WHERE id = ?";
+        String sql = "UPDATE produto SET stock = stock - ? WHERE id = ?";
 
-    try (Connection conn = Conexion.getConnection();
-         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = Conexion.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        pstmt.setInt(1, unidadesRestar);
-        pstmt.setInt(2, idProducto);
+            pstmt.setInt(1, unidadesRestar);
+            pstmt.setInt(2, idProducto);
 
-        pstmt.executeUpdate();
-    } catch (SQLException e) {
-        System.out.println(e.getMessage());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
     }
-}
 
-    
-    
-    
-    
-    
-    
+    public void importarProductos(String filePath) throws PropertyException {
+        String sql = "SELECT nome, prezo, desconto, coste, iva, stock FROM produto";
+        List<Producto> listaProductos = new ArrayList<>();
+
+        try (Connection conn = Conexion.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Producto produto = new Producto(rs.getString("nome"), rs.getDouble("prezo"), rs.getInt("desconto"), rs.getDouble("coste"), rs.getString("iva"), rs.getInt("stock"));
+                produto.setIvaString(rs.getString("iva"));
+                listaProductos.add(produto);
+            }
+
+            ProductosWraper productos = new ProductosWraper();
+            productos.setProductos(listaProductos);
+
+            File file = new File(filePath);
+            JAXBContext jaxbContext = JAXBContext.newInstance(ProductosWraper.class);
+            Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            jaxbMarshaller.marshal(productos, new FileWriter(file));
+
+        } catch (SQLException | JAXBException | IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void importarProductosFromXML(String filePath) throws RuntimeException {
+        File file = new File(filePath);
+        try {
+            JAXBContext jaxbContext = JAXBContext.newInstance(ProductosWraper.class);
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+            ProductosWraper productosWrapper = (ProductosWraper) jaxbUnmarshaller.unmarshal(file);
+            List<Producto> productosList = productosWrapper.getProductos();
+
+            String sql = "INSERT INTO produto (nome, prezo, desconto, coste, iva, stock) VALUES (?, ?, ?, ?, ?, ?)";
+            try (Connection conn = Conexion.getConnection();
+                    PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                for (Producto producto : productosList) {
+                    pstmt.setString(1, producto.getNome());
+                    pstmt.setDouble(2, producto.getPrezo());
+                    pstmt.setInt(3, producto.getDesconto());
+                    pstmt.setDouble(4, producto.getCoste());
+                    // Parse ivaAsignado to corresponding Iva Enum value
+                    Iva iva = Iva.fromDouble(producto.getIvaAsignado());
+                    pstmt.setString(5, iva.name());
+                    pstmt.setInt(6, producto.getStock());
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException ex) {
+                throw new RuntimeException("Error occurred while saving the product to the database.", ex);
+            }
+
+        } catch (JAXBException ex) {
+            throw new RuntimeException("The XML file is not in the correct format.", ex);
+        }
+    }
+
 }
