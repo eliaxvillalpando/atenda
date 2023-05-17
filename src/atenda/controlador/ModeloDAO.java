@@ -511,24 +511,25 @@ public class ModeloDAO {
     }
 
     public void update(Usuario usuario) {
-        // Implementar la lógica para actualizar un usuario
-        String sql = "UPDATE usuario SET username = ?, password = ?, nome = ?, rol = ? WHERE nome = ?";
+    // Implementar la lógica para actualizar un usuario
+    String sql = "UPDATE usuario SET username = ?, password = ?, nome = ?, rol = ?, avatar = ? WHERE id = ?";
 
-        try (Connection conn = Conexion.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    try (Connection conn = Conexion.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, usuario.getUsername());
-            pstmt.setString(2, usuario.getPassword());
-            pstmt.setString(3, usuario.getNome());
-            pstmt.setString(4, usuario.getRol().name());
-            pstmt.setString(5, usuario.getNome());
+        pstmt.setString(1, usuario.getUsername());
+        pstmt.setString(2, usuario.getPassword());
+        pstmt.setString(3, usuario.getNome());
+        pstmt.setString(4, usuario.getRol().name());
+        pstmt.setString(5, usuario.getAvatar());
+        pstmt.setInt(6, usuario.getIdUsuario()); // This should be in the WHERE clause
 
-            pstmt.executeUpdate();
+        pstmt.executeUpdate();
 
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
-        }
+    } catch (SQLException ex) {
+        System.out.println(ex.getMessage());
     }
+}
 
     public boolean autenticar(String usuario, String contraseña) {
         String sql = "SELECT * FROM usuario WHERE username = ? AND password = ?";
@@ -583,6 +584,7 @@ public class ModeloDAO {
                 usuario.setUsername(rs.getString("username"));
                 usuario.setPassword(rs.getString("password"));
                 usuario.setNome(rs.getString("nome"));
+                usuario.setAvatar(rs.getString("avatar"));
                 String rolString = rs.getString("rol");
                 usuario.setIdUsuario(rs.getInt("id"));
                 Rol rol = Rol.valueOf(rolString.toUpperCase());
@@ -973,5 +975,26 @@ public class ModeloDAO {
             throw new RuntimeException("The XML file is not in the correct format.", ex);
         }
     }
+    
+    public String obtenerImagenConId(int idUsuario) {
+        String imagePath = null;
+        
+        try (Connection conn = Conexion.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT avatar FROM usuario WHERE id = ?");
+        ) {
+            pstmt.setInt(1, idUsuario);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    imagePath = rs.getString("imagen");
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+        
+        return imagePath;
+    }
+    
 
 }

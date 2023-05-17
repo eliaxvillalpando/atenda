@@ -7,6 +7,12 @@ package atenda.vista;
 
 import atenda.controlador.ModeloDAO;
 import atenda.modelo.Rol;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
 /**
@@ -24,10 +30,11 @@ public class UsuarioPanel extends javax.swing.JPanel {
     public UsuarioPanel(VistaTPV vistaTPV) {
         initComponents();
         this.vistaTPV = vistaTPV;
+        iconoLabel.setIcon(null); 
 
     }
 
-    public void actualizarIdUsuarioLabel() {
+   public void actualizarIdUsuarioLabel() {
         String idUsuario = vistaTPV.obtenerNombreUsuario();
         usuarioDao = new ModeloDAO();
         int idUser = Integer.parseInt(idUsuario);
@@ -36,6 +43,31 @@ public class UsuarioPanel extends javax.swing.JPanel {
         nombreLabel.setText(usuarioDao.obtenerUserNameConId(idUser));
         rolLabel.setText(usuarioDao.obtenerRolconID(idUser));
 
+        // Mostrar la imagen del usuario
+        String imagePath = usuarioDao.obtenerImagenConId(idUser);
+        if (imagePath != null) {
+            String projectPath = System.getProperty("user.dir");
+            //String fullImagePath = projectPath + "/src/atenda" + imagePath; PARA MAC
+            String fullImagePath = projectPath + "\\src\\atenda" + imagePath;
+            File imageFile = new File(fullImagePath);
+
+            if (imageFile.exists()) {
+                try {
+                    BufferedImage image = ImageIO.read(imageFile);
+                    int labelWidth = iconoLabel.getWidth();
+                    int labelHeight = iconoLabel.getHeight();
+                    Image scaledImage = image.getScaledInstance(labelWidth, labelHeight, Image.SCALE_SMOOTH);
+                    ImageIcon scaledIcon = new ImageIcon(scaledImage);
+                    iconoLabel.setIcon(scaledIcon);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                iconoLabel.setIcon(null);
+            }
+        } else {
+            iconoLabel.setIcon(null);
+        }
     }
 
     /*
@@ -92,14 +124,11 @@ public class UsuarioPanel extends javax.swing.JPanel {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addGap(56, 56, 56)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel6)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(135, 135, 135)
-                        .addComponent(guardarBoton))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(56, 56, 56)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel6)
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -119,10 +148,13 @@ public class UsuarioPanel extends javax.swing.JPanel {
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                             .addComponent(rolLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                             .addComponent(repetirContraseñaField)
-                                            .addComponent(contraseñaField, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE))))
-                                .addGap(54, 54, 54)
-                                .addComponent(iconoLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addContainerGap(127, Short.MAX_VALUE))
+                                            .addComponent(contraseñaField, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)))))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(79, 79, 79)
+                                .addComponent(guardarBoton)))
+                        .addGap(54, 54, 54)
+                        .addComponent(iconoLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(101, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -137,7 +169,7 @@ public class UsuarioPanel extends javax.swing.JPanel {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(usernameLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(18, 18, 18)
+                        .addGap(28, 28, 28)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel3)
                             .addComponent(nombreLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 17, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -158,7 +190,7 @@ public class UsuarioPanel extends javax.swing.JPanel {
                     .addComponent(rolLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 17, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(44, 44, 44)
                 .addComponent(guardarBoton)
-                .addContainerGap(167, Short.MAX_VALUE))
+                .addContainerGap(163, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 

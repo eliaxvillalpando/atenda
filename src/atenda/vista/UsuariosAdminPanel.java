@@ -4,13 +4,30 @@ import atenda.controlador.Conexion;
 import atenda.controlador.ModeloDAO;
 import atenda.modelo.Rol;
 import atenda.modelo.Usuario;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -24,15 +41,20 @@ public class UsuariosAdminPanel extends javax.swing.JPanel {
      */
     private ModeloDAO modeloDAO;
     private boolean nuevoUsuario;
+    private String uploadedImagePath;
 
     public UsuariosAdminPanel() {
+        mostrarFotoEtiqueta = new javax.swing.JLabel();
+         mostrarFotoEtiqueta.revalidate();
+        mostrarFotoEtiqueta.repaint();
         initComponents();
         String[] roles = {"ADMINISTRADOR", "DEPENDENTE"};
         // Establecer el arreglo como modelo del combo box
         comboRol.setModel(new DefaultComboBoxModel<>(roles));
-        modeloDAO =  new ModeloDAO();
+        modeloDAO = new ModeloDAO();
         mostrarUsuarios();
         habilitarCampos(false);
+
     }
 
     private void mostrarUsuarios() {
@@ -78,81 +100,139 @@ public class UsuariosAdminPanel extends javax.swing.JPanel {
     }
 
     private void llenarCampos(Usuario usuario) {
-        System.out.println("Llenar campos metodo" + usuario.getNome());
         if (usuario != null) {
-            habilitarCampos(true);
-            textFieldUsername.setText(usuario.getUsername());
-            textFieldContraseña.setText(usuario.getPassword());
-            textFieldNome.setText(usuario.getNome());
+        habilitarCampos(true);
+        textFieldUsername.setText(usuario.getUsername());
+        textFieldContraseña.setText(usuario.getPassword());
+        textFieldNome.setText(usuario.getNome());
+        String idUsuarioString = String.valueOf(usuario.getIdUsuario());
+        String imagePath = usuario.getAvatar();
+        idEtiqueta.setText(idUsuarioString);
 
-            Rol rol = usuario.getRol();
+        Rol rol = usuario.getRol();
 
-            // Obtener el nombre del rol como un String
-            String rolString = rol != null ? rol.name() : "";
+        // Obtener el nombre del rol como un String
+        String rolString = rol != null ? rol.name() : "";
 
-            // Establecer el rol seleccionado en el combo box
-            comboRol.setSelectedItem(rolString);
+        // Establecer el rol seleccionado en el combo box
+        comboRol.setSelectedItem(rolString);
 
+        if (imagePath != null) {
+            // Load and display the user's image
+            //InputStream imageStream = getClass().getResourceAsStream(imagePath);
+            String projectPath = System.getProperty("user.dir");
+            //String fullImagePath = projectPath + "/src/atenda" + imagePath; LINEA PARA MAC
+            String fullImagePath = projectPath + "\\src\\atenda" + imagePath;
+            
+            File imageFile = new File(fullImagePath);
+            
+            if (imageFile.exists()) {
+                try {
+                    BufferedImage image = ImageIO.read(imageFile);
+                    int labelWidth = mostrarFotoEtiqueta.getWidth();
+                    int labelHeight = mostrarFotoEtiqueta.getHeight();
+                    Image scaledImage = image.getScaledInstance(labelWidth, labelHeight, Image.SCALE_SMOOTH);
+                    ImageIcon scaledIcon = new ImageIcon(scaledImage);
+                    mostrarFotoEtiqueta.setIcon(scaledIcon);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                mostrarFotoEtiqueta.setIcon(null);
+            }
         } else {
-
-            habilitarCampos(false);
-            textFieldUsername.setText("");
-            textFieldContraseña.setText("");
-            textFieldNome.setText("");
+            mostrarFotoEtiqueta.setIcon(null);
         }
+         mostrarFotoEtiqueta.revalidate();
+        mostrarFotoEtiqueta.repaint();
+       
+    } else {
+        habilitarCampos(false);
+        textFieldUsername.setText("");
+        textFieldContraseña.setText("");
+        textFieldNome.setText("");
+        mostrarFotoEtiqueta.setIcon(null); // Clear the label if no user is selected
     }
 
-    private void actualizarUsuario() {
+        
+    }
+
+    private void actualizarUsuario() throws FileNotFoundException {
         int selectedRow = tablaUsuariosAdmin.getSelectedRow();
-        if (selectedRow != -1) {
-            String selectedUser = (String) tablaUsuariosAdmin.getValueAt(selectedRow, 0);
-            Usuario usuario = modeloDAO.obtenerUsuario(selectedUser);
+    if (selectedRow != -1) {
+        String selectedUser = (String) tablaUsuariosAdmin.getValueAt(selectedRow, 0);
+        Usuario usuario = modeloDAO.obtenerUsuario(selectedUser);
 
-            if (usuario != null) {
-                // Obtener los datos del usuario de los campos de texto
-                String username = textFieldUsername.getText();
-                String password = new String(textFieldContraseña.getPassword());
-                String confirmPassword = new String(textFieldRContraseña.getPassword());
-                String nome = textFieldNome.getText();
-                String rolString = (String) comboRol.getSelectedItem();
-                Rol rol = Rol.valueOf(rolString.toUpperCase());
+        if (usuario != null) {
+            // Obtain the user's data from the text fields
+            String username = textFieldUsername.getText();
+            String password = new String(textFieldContraseña.getPassword());
+            String confirmPassword = new String(textFieldRContraseña.getPassword());
+            String nome = textFieldNome.getText();
+            String rolString = (String) comboRol.getSelectedItem();
+            Rol rol = Rol.valueOf(rolString.toUpperCase());
 
-                // Verificar que las contraseñas coincidan
-                if (!password.equals(confirmPassword)) {
-                    etiquetaMensaje.setText("Contraseña no coincide");
-                    return;
+            // Check if a new image was uploaded
+            if (uploadedImagePath != null) {
+                // Delete the existing image file
+                deleteImage(usuario.getAvatar());
+
+                // Update the user's avatar field with the new image path
+                usuario.setAvatar(uploadedImagePath);
+            }
+
+            // Verify that the passwords match
+            if (!password.equals(confirmPassword)) {
+                etiquetaMensaje.setText("Contraseña no coincide");
+                return;
+            }
+
+            // Update the user's fields
+            usuario.setUsername(username);
+            usuario.setPassword(password);
+            usuario.setNome(nome);
+            usuario.setRol(rol);
+            
+
+            // Update the user in the database
+            modeloDAO.update(usuario);
+
+            // Update the users table
+            mostrarUsuarios();
+
+            // Fill the fields with the updated user's data
+            llenarCampos(usuario);
+
+            // Clear the fields
+            textFieldUsername.setText("");
+            textFieldContraseña.setText("");
+            textFieldRContraseña.setText("");
+            textFieldNome.setText("");
+            comboRol.setSelectedIndex(0);
+
+            // Clear the error message
+            etiquetaMensaje.setText("");
+        }
+    }
+    }
+
+    private void deleteImage(String imagePath) throws FileNotFoundException {
+        if (imagePath != null) {
+            String projectPath = System.getProperty("user.dir");
+            //String fullImagePath = projectPath + "/src/atenda" + imagePath; PARA MAC
+            String fullImagePath = projectPath + "\\src\\atenda" + imagePath;
+            File imageFile = new File(fullImagePath);
+            if (imageFile.exists()) {
+                InputStream imageStream = new FileInputStream(imageFile);
+                boolean deleted = imageFile.delete();
+                if (!deleted) {
+                    System.out.println("Failed to delete the image file.");
                 }
-
-                // Actualizar los campos del usuario
-                usuario.setUsername(username);
-                usuario.setPassword(password);
-                usuario.setNome(nome);
-                usuario.setRol(rol);
-                usuario.setAvatar("/path/to/avatar");
-
-                // Actualizar el usuario en la base de datos
-                modeloDAO.update(usuario);
-
-                // Llenar los campos con los nuevos datos del usuario actualizado
-                llenarCampos(usuario);
-
-                // Actualizar la tabla de usuarios
-                mostrarUsuarios();
-
-                // Limpiar los campos
-                textFieldUsername.setText("");
-                textFieldContraseña.setText("");
-                textFieldRContraseña.setText("");
-                textFieldNome.setText("");
-                comboRol.setSelectedIndex(0);
-
-                // Limpiar el mensaje de error
-                etiquetaMensaje.setText("");
             }
         }
     }
 
-    private void crearUsuario() {
+    private void crearUsuario(String imagen) {
         // Obtener los datos del usuario de los campos de texto
         String username = textFieldUsername.getText();
         String password = new String(textFieldContraseña.getPassword());
@@ -179,7 +259,7 @@ public class UsuariosAdminPanel extends javax.swing.JPanel {
         nuevoUsuario.setPassword(password);
         nuevoUsuario.setNome(nome);
         nuevoUsuario.setRol(rol);
-        nuevoUsuario.setAvatar("/path/to/avatar");
+        nuevoUsuario.setAvatar(imagen);
 
         // Guardar el nuevo usuario en la base de datos
         modeloDAO.saveUsuario(nuevoUsuario);
@@ -218,14 +298,15 @@ public class UsuariosAdminPanel extends javax.swing.JPanel {
         botonNuevoUsuario = new javax.swing.JButton();
         botonGuardar = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
-        jLabel7 = new javax.swing.JLabel();
+        mostrarFotoEtiqueta = new javax.swing.JLabel();
         textFieldUsername = new javax.swing.JTextField();
         textFieldNome = new javax.swing.JTextField();
         textFieldContraseña = new javax.swing.JPasswordField();
         textFieldRContraseña = new javax.swing.JPasswordField();
         comboRol = new javax.swing.JComboBox<>();
         etiquetaMensaje = new javax.swing.JLabel();
-        jFileChooser1 = new javax.swing.JFileChooser();
+        botonSubirFoto = new javax.swing.JButton();
+        idEtiqueta = new javax.swing.JLabel();
 
         tablaUsuariosAdmin.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -293,7 +374,12 @@ public class UsuariosAdminPanel extends javax.swing.JPanel {
 
         jLabel6.setText("Id");
 
-        jLabel7.setText("Foto");
+        botonSubirFoto.setText("Seleccionar foto");
+        botonSubirFoto.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                botonSubirFotoMouseClicked(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -304,40 +390,47 @@ public class UsuariosAdminPanel extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 157, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(35, 35, 35)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(jLabel2)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel6)
-                                    .addComponent(jLabel1)))
-                            .addComponent(jLabel3)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel5))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(227, 227, 227))
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(50, 50, 50)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(etiquetaMensaje, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
-                                    .addComponent(textFieldNome, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
-                                    .addComponent(textFieldUsername)
-                                    .addComponent(textFieldContraseña)
-                                    .addComponent(textFieldRContraseña, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
-                                    .addComponent(comboRol, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addGap(62, 62, 62))))
+                                .addGap(31, 31, 31)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabel1)
+                                        .addComponent(jLabel3)
+                                        .addComponent(jLabel4)
+                                        .addComponent(jLabel5)
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                            .addComponent(idEtiqueta, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(jLabel2)
+                                        .addGap(60, 60, 60)))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(50, 50, 50)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(etiquetaMensaje, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
+                                            .addComponent(textFieldNome, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
+                                            .addComponent(textFieldUsername)
+                                            .addComponent(textFieldContraseña)
+                                            .addComponent(textFieldRContraseña, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
+                                            .addComponent(comboRol, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addGap(62, 62, 62))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                        .addComponent(mostrarFotoEtiqueta, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(96, 96, 96))))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(botonSubirFoto)
+                                .addGap(116, 116, 116))))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(botonNuevoUsuario)
                         .addGap(30, 30, 30)
                         .addComponent(botonGuardar)
                         .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jFileChooser1, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(botonEliminarUsuario))
-                        .addContainerGap())))
+                        .addComponent(botonEliminarUsuario)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -345,29 +438,34 @@ public class UsuariosAdminPanel extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(20, 20, 20)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(37, 37, 37)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(textFieldUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel2)
-                            .addComponent(textFieldContraseña, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel3)
-                            .addComponent(textFieldRContraseña, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel4)
-                            .addComponent(textFieldNome, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel5)
-                            .addComponent(comboRol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(mostrarFotoEtiqueta, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(botonSubirFoto)
+                                .addGap(47, 47, 47)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jLabel1)
+                                    .addComponent(textFieldUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jLabel2)
+                                    .addComponent(textFieldContraseña, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jLabel3)
+                                    .addComponent(textFieldRContraseña, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jLabel4)
+                                    .addComponent(textFieldNome, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jLabel5)
+                                    .addComponent(comboRol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(idEtiqueta, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel6))))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(32, 32, 32)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 296, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -381,9 +479,7 @@ public class UsuariosAdminPanel extends javax.swing.JPanel {
                     .addGroup(layout.createSequentialGroup()
                         .addGap(18, 18, 18)
                         .addComponent(etiquetaMensaje, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(35, 35, 35)
-                .addComponent(jFileChooser1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(71, Short.MAX_VALUE))
+                .addContainerGap(30, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -419,10 +515,14 @@ public class UsuariosAdminPanel extends javax.swing.JPanel {
 
         if (nuevoUsuario) {
             // Si es un nuevo usuario
-            crearUsuario();
+            crearUsuario(uploadedImagePath);
         } else if (!username.isEmpty()) {
-            // Si no es un nuevo usuario y el campo de nombre de usuario no está vacío
-            actualizarUsuario();
+            try {
+                // Si no es un nuevo usuario y el campo de nombre de usuario no está vacío
+                actualizarUsuario();
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(UsuariosAdminPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
         // Restablecer la variable nuevoUsuario a false después de crear o actualizar
@@ -432,50 +532,111 @@ public class UsuariosAdminPanel extends javax.swing.JPanel {
 
     private void botonEliminarUsuarioMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonEliminarUsuarioMouseClicked
         // TODO add your handling code here:
-         int selectedRow = tablaUsuariosAdmin.getSelectedRow();
-    if (selectedRow != -1) {
-        // Obtener el nombre del usuario seleccionado en la tabla
-        String nombreUsuario = (String) tablaUsuariosAdmin.getValueAt(selectedRow, 0);
-        
-        // Obtener el objeto Usuario desde la base de datos
-        Usuario usuario = modeloDAO.obtenerUsuario(nombreUsuario);
-        
-        if (usuario != null) {
-            // Intentar eliminar el usuario de la base de datos
-            boolean fueEliminado = modeloDAO.eliminarPorId(usuario.getIdUsuario());
-            
-            if (fueEliminado) {
-                // Mostrar mensaje de éxito
-                etiquetaMensaje.setText("Usuario eliminado exitosamente");
-                
-                // Actualizar la tabla de usuarios
-                mostrarUsuarios();
-            } else {
-                // Mostrar mensaje de error
-                etiquetaMensaje.setText("Hubo un error al intentar eliminar el usuario");
+        int selectedRow = tablaUsuariosAdmin.getSelectedRow();
+        if (selectedRow != -1) {
+            // Obtener el nombre del usuario seleccionado en la tabla
+            String nombreUsuario = (String) tablaUsuariosAdmin.getValueAt(selectedRow, 0);
+
+            // Obtener el objeto Usuario desde la base de datos
+            Usuario usuario = modeloDAO.obtenerUsuario(nombreUsuario);
+
+            if (usuario != null) {
+                // Intentar eliminar el usuario de la base de datos
+                boolean fueEliminado = modeloDAO.eliminarPorId(usuario.getIdUsuario());
+
+                if (fueEliminado) {
+                    // Mostrar mensaje de éxito
+                    etiquetaMensaje.setText("Usuario eliminado exitosamente");
+
+                    // Actualizar la tabla de usuarios
+                    mostrarUsuarios();
+                } else {
+                    // Mostrar mensaje de error
+                    etiquetaMensaje.setText("Hubo un error al intentar eliminar el usuario");
+                }
             }
         }
-    }
-    
-    
+
+
     }//GEN-LAST:event_botonEliminarUsuarioMouseClicked
+
+    private void botonSubirFotoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_botonSubirFotoMouseClicked
+        // TODO add your handling code here:
+        // Create a file chooser
+        JFileChooser fileChooser = new JFileChooser();
+    fileChooser.setFileFilter(new FileNameExtensionFilter("Image Files", "jpg", "jpeg", "png", "gif"));
+    int result = fileChooser.showOpenDialog(this);
+
+    if (result == JFileChooser.APPROVE_OPTION) {
+        try {
+            File selectedFile = fileChooser.getSelectedFile();
+            String fileName = selectedFile.getName();
+            String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+            
+            String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+            String newFileName = timeStamp + "." + extension;
+            
+            String projectPath = System.getProperty("user.dir");
+            //String imagePath = projectPath + "/src/atenda/imagenes/" + newFileName; PARA MAC OS
+            String imagePath = projectPath + "\\src\\atenda\\imagenes\\" + newFileName;
+
+            
+            File destinationFile = new File(imagePath);
+            
+            File parentDir = destinationFile.getParentFile();
+            if (!parentDir.exists()) {
+                boolean created = parentDir.mkdirs();
+                if (!created) {
+                    System.out.println("Failed to create parent directories for the destination file.");
+                    return;
+                }
+            }
+            
+            try {
+                Files.copy(selectedFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            
+            //uploadedImagePath = "../imagenes/" + newFileName;
+            uploadedImagePath = "/imagenes/" + newFileName;
+            
+            //ImageIcon imageIcon = new ImageIcon(destinationFile.getAbsolutePath());
+            //Image image = imageIcon.getImage();
+            BufferedImage image = ImageIO.read(destinationFile);
+            Image scaledImage = image.getScaledInstance(mostrarFotoEtiqueta.getWidth(), mostrarFotoEtiqueta.getHeight(), Image.SCALE_SMOOTH);
+            mostrarFotoEtiqueta.setIcon(new ImageIcon(scaledImage));
+            mostrarFotoEtiqueta.revalidate();
+            mostrarFotoEtiqueta.repaint();
+            mostrarFotoEtiqueta.getParent().revalidate();
+            mostrarFotoEtiqueta.getParent().repaint();
+            
+        } catch (IOException ex) {
+                Logger.getLogger(UsuariosAdminPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+
+
+    }//GEN-LAST:event_botonSubirFotoMouseClicked
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton botonEliminarUsuario;
     private javax.swing.JButton botonGuardar;
     private javax.swing.JButton botonNuevoUsuario;
+    private javax.swing.JButton botonSubirFoto;
     private javax.swing.JComboBox<String> comboRol;
     private javax.swing.JLabel etiquetaMensaje;
-    private javax.swing.JFileChooser jFileChooser1;
+    private javax.swing.JLabel idEtiqueta;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel mostrarFotoEtiqueta;
     private javax.swing.JTable tablaUsuariosAdmin;
     private javax.swing.JPasswordField textFieldContraseña;
     private javax.swing.JTextField textFieldNome;
